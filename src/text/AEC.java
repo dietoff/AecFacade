@@ -1,6 +1,5 @@
 package text;
 import java.awt.Color;
-
 import org.aec.facade.*;
 import processing.core.PApplet;
 

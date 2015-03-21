@@ -1,4 +1,4 @@
-package text;
+//package text;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -7,16 +7,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
 import processing.data.Table;
 import processing.data.TableRow;
-
-public class FacadeEntropy extends PApplet {
-
 
 	private float perc = .25f;
 	private float fillrate = 0.7f;
@@ -45,15 +41,11 @@ public class FacadeEntropy extends PApplet {
 	private boolean loaded=false;
 	private String textString;
 	private boolean rot = false;
-	private HashMap<Integer, Request> reqMap;
-	private ArrayList<Request> reqList;
-	private boolean incoming = false;
-	private int rx = 0;
+	private HashMap<Integer, Request> requests;
 
 	public void setup() {
 		thread("requestData");
-		reqMap = new HashMap<Integer, Request>();
-		reqList = new ArrayList<Request>();
+		requests = new HashMap<Integer, Request>();
 		frameRate(25);
 		size(1200, 400);
 		readTopology();
@@ -204,23 +196,22 @@ public class FacadeEntropy extends PApplet {
 		// determines the speed (number of frames between text movements)
 		int frameInterval = 3;
 		// min and max grid positions at which the text origin should be. we scroll from max (+40) to min (-80)
-		String txt = reqList.get(rx).getTitle();
-		int maxPos = 80;
-		int minPos = (int) (-txt.length()*FONT_SIZE); 
+		int minPos = -1500;
+		int maxPos = 50;
 		int loopFrames = (maxPos-minPos) * frameInterval;
 		// vertical grid pos
 		int yPos = 10;
-		renderText(max(minPos, maxPos - (frameCount%loopFrames) / frameInterval), yPos, txt );
+		displayText(max(minPos, maxPos - (frameCount%loopFrames) / frameInterval), yPos);
 	}
 
-	void renderText(int x, int y, String txt)
+	void displayText(int x, int y)
 		{
 //			String textString ="";
 			// push & translate to the text origin
 			pushMatrix();
 			if (rot) {
 				rotate(PI/2);
-				translate(-50,-42);
+				translate(0,-42);
 			}
 			translate(x,y+FONT_OFFSET_Y);
 	
@@ -229,9 +220,9 @@ public class FacadeEntropy extends PApplet {
 			textFont(font1);
 			textSize(FONT_SIZE);
 	
-			text(txt, 0, 0);
-			text(txt, 0, 4);
-			text(txt, 0, 8);
+			text(textString, 0, 0);
+			text(textString, 0, 4);
+			text(textString, 0, 8);
 			
 			// draw the font glyph by glyph, because the default kerning doesn't align with our grid
 	//		for(int i = 0; i < textString.length(); i++)
@@ -360,9 +351,6 @@ public class FacadeEntropy extends PApplet {
 		case '2':state=19;break;
 		case 'q':text=!text;break;
 		case 'w':rot=!rot;break;
-		case 'a':rx = Math.max(0,(rx-1)%reqList.size());break;
-		case 's':rx = Math.max(0,(rx+1)%reqList.size());break;
-
 		}
 	}
 
@@ -408,13 +396,11 @@ public class FacadeEntropy extends PApplet {
 			    r.setDatec( DateFormat.getDateInstance().parse(m.getString("dateCreated")));
 			    r.setDatem( DateFormat.getDateInstance().parse(m.getString("dateLastModified")));
 			    
-			    if (!reqMap.containsKey(r.getId())) {
+			    if (!requests.containsKey(r.getId())) {
 			    	// new report!
-			    	incoming  = true;
-			    	reqMap.put(r.getId(),r);
-			    	reqList.add(r);
 			    }
 			    
+			    requests.put(r.getId(),r);
 			    
 			    String title = m.getString("title");
 			    textString = textString+title+". ";
@@ -422,6 +408,6 @@ public class FacadeEntropy extends PApplet {
 		  text = true;
 		}
 	
-}
+
 
 
