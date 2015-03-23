@@ -67,7 +67,7 @@ public class FacadeEntropy extends PApplet {
 		// font1 = loadFont("CourierNewPS-BoldMT-20.vlw");
 		aec = new AEC(this);
 		aec.init();
-		frameRate(30);
+		frameRate(25);
 	}
 
 	private void readTopology() {
@@ -185,6 +185,10 @@ public class FacadeEntropy extends PApplet {
 		background(0,0,0);
 		dotDisplay();
 		if (text) textDisplay();
+		if (frameCount%100==0) rot = !rot;
+		if (frameCount%100==0) rx = (int) random(0f,10f);
+//		if (frameCount%150==0) state = (int) random(0f,20f);
+		
 		executeState();
 		aec.endDraw();
 		aec.drawSides();
@@ -208,6 +212,7 @@ public class FacadeEntropy extends PApplet {
 		int maxPos = 80;
 		int minPos = (int) (-txt.length()*FONT_SIZE); 
 		int loopFrames = (maxPos-minPos) * frameInterval;
+		
 		// vertical grid pos
 		int yPos = 10;
 		renderText(max(minPos, maxPos - (frameCount%loopFrames) / frameInterval), yPos, txt );
@@ -310,6 +315,8 @@ public class FacadeEntropy extends PApplet {
 		a.addAll(idmap.values());
 		Collections.shuffle(a);
 	
+		
+		
 		for (int i = 0; i< a.size()*perc; i++ ) {
 			Pixel p = a.get(i);
 			//if (p.x%10!=0)
@@ -405,8 +412,8 @@ public class FacadeEntropy extends PApplet {
 			    r.setLat(m.getInt("lat",0));
 			    r.setActive(m.getInt("active",0));
 			    r.setDistrict(m.getString("district",""));
-			    r.setDatec( DateFormat.getDateInstance().parse(m.getString("dateCreated")));
-			    r.setDatem( DateFormat.getDateInstance().parse(m.getString("dateLastModified")));
+			    r.setDatec(DateFormat.getDateInstance().parse(m.getString("dateCreated")));
+			    r.setDatem(DateFormat.getDateInstance().parse(m.getString("dateLastModified")));
 			    
 			    if (!reqMap.containsKey(r.getId())) {
 			    	// new report!
