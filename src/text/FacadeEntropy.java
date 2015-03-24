@@ -23,20 +23,23 @@ public class FacadeEntropy extends PApplet {
 	AEC aec;
 	PFont font1;
 	// some parameters that turned out to work best for the font we're using
-//	private String font = "../data/8bitOperatorPlus8-Regular.ttf"; //
-	private String font = "../data/coders_crux.ttf"; 
+//	private String font = "8bitOperatorPlus-Regular.ttf";
+	private String font = "../data/8bitOperatorPlus8-Regular.ttf"; //
+//	private String font = "../data/coders_crux.ttf"; 
 //	private String font = "../data/Minecraftia-Regular.ttf"; 
 //	private String font = "../data/FreePixel.ttf"; 
 	private float fontkern = 3;
-	float FONT_SIZE = 6;
-	float FONT_OFFSET_Y = 0.12f;
-	float FONT_SCALE_X = 2.669f;
-	float FONT_SCALE_Y = 2.67f;
+	float FONT_SIZE = 4;
+//	float FONT_OFFSET_Y = 0.12f;
+//	float FONT_SCALE_X = 2.669f;
+//	float FONT_SCALE_Y = 2.67f;
+	float FONT_SCALE_X = 2.88f;
+	float FONT_SCALE_Y = 2.86f;
+	float FONT_OFFSET_Y = 0.143f;
 
+	
 	private HashMap<Integer, Pixel> idmap;
 	private HashMap<Integer, Pixel> xymap;
-	private HashMap<Integer, ArrayList<Pixel>> xmap;
-	private HashMap<Integer, ArrayList<Pixel>> ymap;
 	private int state = 1;
 	private int dir = 0;
 	private boolean diag = true;
@@ -49,6 +52,7 @@ public class FacadeEntropy extends PApplet {
 	private ArrayList<Request> reqList;
 	private boolean incoming = false;
 	private int rx = 0;
+	private int txtx=20;
 
 	public void setup() {
 		thread("requestData");
@@ -57,7 +61,7 @@ public class FacadeEntropy extends PApplet {
 		frameRate(25);
 		size(1200, 400);
 		readTopology();
-		for (Pixel p:idmap.values()) random(p);
+		for (Pixel p:idmap.values()) moderandom(p);
 		// NOTE: This font needs to be in the data folder.
 		// and it's available for free at http://www.dafont.com
 		// You COULD use a different font, but you'd have to tune the above parameters. Monospaced bitmap fonts work best.
@@ -74,8 +78,6 @@ public class FacadeEntropy extends PApplet {
 		Table table = loadTable("../data/window2mask_crop.csv", "header");
 		idmap = new HashMap<Integer, Pixel>();
 		xymap = new HashMap<Integer, Pixel>();
-		xmap = new HashMap<Integer, ArrayList<Pixel>>();
-		ymap = new HashMap<Integer, ArrayList<Pixel>>();
 		int minx = Integer.MAX_VALUE;
 		int maxx = Integer.MIN_VALUE;
 		int miny = Integer.MAX_VALUE;
@@ -94,22 +96,6 @@ public class FacadeEntropy extends PApplet {
 
 			int w = row.getInt("width");
 			Pixel pix = new Pixel(id,x,y,w);
-
-			if (!xmap.containsKey(x)) {
-				ArrayList<Pixel> tmp = new ArrayList<Pixel>();
-				tmp.add(pix);
-				xmap.put(x, tmp);
-			} else {
-				xmap.get(x).add(pix);
-			}
-
-			if (!ymap.containsKey(y)) {
-				ArrayList<Pixel> tmp = new ArrayList<Pixel>();
-				tmp.add(pix);
-				ymap.put(y, tmp);
-			} else {
-				ymap.get(y).add(pix);
-			}
 			idmap.put(id, pix);
 			xymap.put(combine(x, y), pix);
 		}
@@ -117,18 +103,17 @@ public class FacadeEntropy extends PApplet {
 		for (Pixel p:idmap.values()) {
 			if (!xymap.values().contains(p)) println(p.id);
 		}
-		
+
 		calculateNeighbors(minx, maxx, miny, maxy);
+		
+		//remove duplicate pixels per x,y
 		ArrayList<Pixel> rem = new ArrayList<Pixel>();
 		for (Pixel p:idmap.values()) {
 			if (!xymap.containsValue(p)) {
-				println("removed "+ p.x+","+p.y);
 				rem.add(p);
 			}
 		}
-		for (Pixel p:rem) {
-			idmap.remove(p.id);
-		}
+		for (Pixel p:rem) idmap.remove(p.id);
 	}
 
 	private void calculateNeighbors(int minx, int maxx, int miny, int maxy) {
@@ -194,10 +179,10 @@ public class FacadeEntropy extends PApplet {
 		background(0,0,0);
 		dotDisplay();
 		if (text) textDisplay();
-//		if (frameCount%100==0) rot = !rot;
-//		if (frameCount%100==0) rx = (int) random(0f,10f);
-//		if (frameCount%150==0) state = (int) random(0f,20f);
-		
+		//		if (frameCount%100==0) rot = !rot;
+		//		if (frameCount%100==0) rx = (int) random(0f,10f);
+		//		if (frameCount%150==0) state = (int) random(0f,20f);
+
 		executeState();
 		aec.endDraw();
 		aec.drawSides();
@@ -219,104 +204,43 @@ public class FacadeEntropy extends PApplet {
 		// min and max grid positions at which the text origin should be. we scroll from max (+40) to min (-80)
 		String txt = reqList.get(rx).getTitle();
 		int maxPos = 80;
-		int minPos = (int) (-txt.length()*FONT_SIZE); 
+		int minPos = (int) (-txt.length()*FONT_SIZE); // looppoint based on lenght of string
 		int loopFrames = (maxPos-minPos) * frameInterval;
-		
+
 		// vertical grid pos
 		int yPos = 10;
-		renderText(max(minPos, maxPos - (frameCount%loopFrames) / frameInterval), yPos, txt );
+//		renderText(max(minPos, maxPos - (frameCount%loopFrames) / frameInterval), yPos, txt );
+		renderText(txtx, yPos, txt );
+
 	}
 
 	void renderText(int x, int y, String txt)
-		{
-//			String textString ="";
-			// push & translate to the text origin
-			pushMatrix();
-			if (rot) {
-				rotate(PI/2);
-				translate(-50,-42);
-			}
-			translate(x,y+FONT_OFFSET_Y);
-	
-			// scale the font up by fixed parameters so it fits our grid
-			scale(FONT_SCALE_X,FONT_SCALE_Y);
-			textFont(font1);
-			textSize(FONT_SIZE);
-	
-			text(txt, 0, 0);
-			text(txt, 0, 4);
-			text(txt, 0, 8);
-			
-			// draw the font glyph by glyph, because the default kerning doesn't align with our grid
-	//		for(int i = 0; i < textString.length(); i++)
-	//		{
-	//			text(textString.charAt(i), (float)(i*fontkern), 0);
-	//		}
-			popMatrix();
+	{
+		// push & translate to the text origin
+		pushMatrix();
+		if (rot) {
+			rotate(PI/2);
+			translate(-50,-43);
 		}
+		translate(x,y+FONT_OFFSET_Y);
 
-	private void checker(Pixel p) {
-			if (p.x%2+p.y%2==1) p.on = true; else p.on = false;
-	}
-	private void checker2(Pixel p) {
-			if (p.x%2+p.y%2!=1) p.on = true; else p.on = false;
-	}
-	private void diag(Pixel p) {
-			if ((p.x+p.y)%4==0) p.on = true; else p.on = false;
-	}
-	private void diag2(Pixel p) {
-		if ((p.x-p.y)%4==0) p.on = true; else p.on = false;
-	}
-	private void vert(Pixel p) {
-			if (p.x%3==0) p.on = true; else p.on = false;
-	}
-	private void hor(Pixel p) {
-		if (p.y%3==0) p.on = true; else p.on = false;
-}
-	private void random(Pixel p) {
-			float random = random(0,1);
-			if (random > fillrate) p.on = true; else p.on = false;
-	}
-	private boolean forward(int dir,Pixel p) {if (canGo(dir,p)) {
-		move(dir,p);
-		return true;
-		} else return false;
-	}
-	
-	private void forwDiag(Pixel p) {
-		if (!p.on) return;
-		if (forward(dir,p)); else {
-			if (!diag) return;
-			if (forward(frontleft(),p)); else {
-				if (forward(frontright(),p));
-			}
-		};
-		if (p.hasLeft(dir)&&p.getLeft(dir).hasDirOff(frontleft())) {
-			forward(left(),p);
-			forward(frontleft(),p);
-		}
-		else {
-			if (p.hasRight(dir)&&p.getRight(dir).hasDirOff(frontright())) {
-				forward(right(),p);
-				forward(frontright(),p);
-			}
-		}
-	}
-	
-	private void move(int dir, Pixel p) {
-		p.on=false;
-		p.getDir(dir).on=true;
-	}
-	
-	private boolean canGo(int dir,Pixel p) {
-		return p.on&&p.hasDirOff(dir);
-	}
+		// scale the font up by fixed parameters so it fits our grid
+		scale(FONT_SCALE_X,FONT_SCALE_Y);
+		textFont(font1);
+		textSize(FONT_SIZE);
 
-	private void full(Pixel p) {
-		p.on = true;
-	}
-	private void empty(Pixel p) {
-		p.on = false;
+		text(txt, 0, 0);
+		translate(0,-FONT_OFFSET_Y);
+		text(txt, 0, 4);
+		translate(0,-FONT_OFFSET_Y);
+		text(txt, 0, 8);
+
+		// draw the font glyph by glyph, because the default kerning doesn't align with our grid
+		//		for(int i = 0; i < textString.length(); i++)
+		//		{
+		//			text(textString.charAt(i), (float)(i*fontkern), 0);
+		//		}
+		popMatrix();
 	}
 
 	private void executeState() {
@@ -324,8 +248,8 @@ public class FacadeEntropy extends PApplet {
 		a.addAll(idmap.values());
 		Collections.shuffle(a);
 	
-		
-		
+	
+	
 		for (int i = 0; i< a.size()*perc; i++ ) {
 			Pixel p = a.get(i);
 			//if (p.x%10!=0)
@@ -339,18 +263,84 @@ public class FacadeEntropy extends PApplet {
 				case 6:dir=5;forwDiag(p);break;
 				case 7:dir=6;forwDiag(p);break;
 				case 8:dir=7;forwDiag(p);break;
-				case 11:random(p);break;
-				case 12:checker(p);break;
-				case 13:checker2(p);break;
-				case 14:diag(p);break;
-				case 15:diag2(p);break;
-				case 16:vert(p);break;
-				case 17:hor(p);break;
-				case 18:full(p);break;
-				case 19:empty(p);break;
+				case 11:moderandom(p);break;
+				case 12:modechecker(p);break;
+				case 13:modechecker2(p);break;
+				case 14:modediag(p);break;
+				case 15:modediag2(p);break;
+				case 16:modevert(p);break;
+				case 17:modehor(p);break;
+				case 18:modefull(p);break;
+				case 19:modeempty(p);break;
 				}
 			}
 		}
+	}
+
+	private void modechecker(Pixel p) {
+		if (p.x%2+p.y%2==1) p.on = true; else p.on = false;
+	}
+	private void modechecker2(Pixel p) {
+		if (p.x%2+p.y%2!=1) p.on = true; else p.on = false;
+	}
+	private void modediag(Pixel p) {
+		if ((p.x+p.y)%4==0) p.on = true; else p.on = false;
+	}
+	private void modediag2(Pixel p) {
+		if ((p.x-p.y)%4==0) p.on = true; else p.on = false;
+	}
+	private void modevert(Pixel p) {
+		if (p.x%3==0) p.on = true; else p.on = false;
+	}
+	private void modehor(Pixel p) {
+		if (p.y%3==0) p.on = true; else p.on = false;
+	}
+	private void modefull(Pixel p) {
+		p.on = true;
+	}
+	private void modeempty(Pixel p) {
+		p.on = false;
+	}
+	private void moderandom(Pixel p) {
+		float random = random(0,1);
+		if (random > fillrate) p.on = true; else p.on = false;
+	}
+	
+	
+	
+	// move 
+	private boolean forward(int dir,Pixel p) {if (canGo(dir,p)) {
+		move(dir,p);
+		return true;
+	} else return false;
+	}
+	private void forwDiag(Pixel p) {
+		if (!p.on) return;
+		if (forward(dir,p)); else {
+			if (!diag) return;
+			if (forward(p.frontleft(dir),p)); else {
+				if (forward(p.frontright(dir),p));
+			}
+		};
+		if (p.hasLeft(dir)&&p.getLeft(dir).hasDirOff(p.frontleft(dir))) {
+			forward(p.left(dir),p);
+			forward(p.frontleft(dir),p);
+		}
+		else {
+			if (p.hasRight(dir)&&p.getRight(dir).hasDirOff(p.frontright(dir))) {
+				forward(p.right(dir),p);
+				forward(p.frontright(dir),p);
+			}
+		}
+	}
+
+	private void move(int dir, Pixel p) {
+		p.on=false;
+		p.getDir(dir).on=true;
+	}
+
+	private boolean canGo(int dir,Pixel p) {
+		return p.on&&p.hasDirOff(dir);
 	}
 
 	public void keyPressed() {
@@ -378,66 +368,48 @@ public class FacadeEntropy extends PApplet {
 		case 'w':rot=!rot;break;
 		case 'a':rx = Math.max(0,(rx-1)%reqList.size());break;
 		case 's':rx = Math.max(0,(rx+1)%reqList.size());break;
-
 		}
-	}
-
-	public int left() {
-		return dir+6%8;
-	}
-	public int right() {
-		return dir+2%8;
-	}
-	public int back() {
-		return dir+4%8;
-	}
-	public int frontleft() {
-		return dir+7%8;
-	}
-	public int frontright() {
-		return dir+1%8;
-	}
-	public int backleft() {
-		return dir+5%8;
-	}
-	public int backright() {
-		return dir+3%8;
+		
+		switch(keyCode) {
+		case RIGHT:txtx++;break;
+		case LEFT:txtx--;break;
+		}
 	}
 
 	public void requestData() throws ParseException {
-		  JSONObject json = loadJSONObject(url);
-		  JSONArray msg = json.getJSONArray("MESSAGELIST");
-		  textString="";
-		  for (int i = 0; i < msg.size(); i++) {
-			    
-			    JSONObject m = msg.getJSONObject(i); 
-			    Request r = new Request();
-			    r.setId(m.getInt("id"));
-			    r.setTitle(m.getString("title",""));
-			    r.setText(m.getString("text",""));
-			    r.setStatus(m.getInt("status",0));
-			    r.setCategory(m.getString("category",""));
-			    r.setLon(m.getInt("lon",0));
-			    r.setLat(m.getInt("lat",0));
-			    r.setActive(m.getInt("active",0));
-			    r.setDistrict(m.getString("district",""));
-			    r.setDatec(DateFormat.getDateInstance().parse(m.getString("dateCreated")));
-			    r.setDatem(DateFormat.getDateInstance().parse(m.getString("dateLastModified")));
-			    
-			    if (!reqMap.containsKey(r.getId())) {
-			    	// new report!
-			    	incoming  = true;
-			    	reqMap.put(r.getId(),r);
-			    	reqList.add(r);
-			    }
-			    
-			    
-			    String title = m.getString("title");
-			    textString = textString+title+". ";
-			  }
-		  text = true;
+		JSONObject json = loadJSONObject(url);
+		JSONArray msg = json.getJSONArray("MESSAGELIST");
+		textString="";
+		for (int i = 0; i < msg.size(); i++) {
+
+			JSONObject m = msg.getJSONObject(i); 
+			Request r = new Request();
+			r.setId(m.getInt("id"));
+			r.setTitle(m.getString("title",""));
+			r.setText(m.getString("text",""));
+			r.setStatus(m.getInt("status",0));
+			r.setCategory(m.getString("category",""));
+			r.setLon(m.getInt("lon",0));
+			r.setLat(m.getInt("lat",0));
+			r.setActive(m.getInt("active",0));
+			r.setDistrict(m.getString("district",""));
+			r.setDatec(DateFormat.getDateInstance().parse(m.getString("dateCreated")));
+			r.setDatem(DateFormat.getDateInstance().parse(m.getString("dateLastModified")));
+
+			if (!reqMap.containsKey(r.getId())) {
+				// new report!
+				incoming  = true;
+				reqMap.put(r.getId(),r);
+				reqList.add(r);
+			}
+
+
+			String title = m.getString("title");
+			textString = textString+title+". ";
 		}
-	
+		text = true;
+	}
+
 }
 
 

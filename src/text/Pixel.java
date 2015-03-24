@@ -144,6 +144,28 @@ public class Pixel {
 	public boolean hasNW() {
 		return nbhd.containsKey(7);
 	}
+	
+	public int left(int dir) {
+		return dir+6%8;
+	}
+	public int right(int dir) {
+		return dir+2%8;
+	}
+	public int back(int dir) {
+		return dir+4%8;
+	}
+	public int frontleft(int dir) {
+		return dir+7%8;
+	}
+	public int frontright(int dir) {
+		return dir+1%8;
+	}
+	public int backleft(int dir) {
+		return dir+5%8;
+	}
+	public int backright(int dir) {
+		return dir+3%8;
+	}
 
 	public void addNeighbor(String s, Pixel p) {
 		if (s=="top") {
