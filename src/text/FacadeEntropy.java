@@ -18,8 +18,8 @@ import processing.data.TableRow;
 public class FacadeEntropy extends PApplet {
 
 
-	private float perc = .25f;
-	private float fillrate = 0.7f;
+	private float perc = .15f;
+	private float fillrate = 0.5f;
 	AEC aec;
 	PFont font1;
 	// some parameters that turned out to work best for the font we're using
@@ -57,7 +57,7 @@ public class FacadeEntropy extends PApplet {
 		frameRate(25);
 		size(1200, 400);
 		readTopology();
-		for (Pixel p:idmap.values()) randomize(p);
+		for (Pixel p:idmap.values()) random(p);
 		// NOTE: This font needs to be in the data folder.
 		// and it's available for free at http://www.dafont.com
 		// You COULD use a different font, but you'd have to tune the above parameters. Monospaced bitmap fonts work best.
@@ -119,6 +119,16 @@ public class FacadeEntropy extends PApplet {
 		}
 		
 		calculateNeighbors(minx, maxx, miny, maxy);
+		ArrayList<Pixel> rem = new ArrayList<Pixel>();
+		for (Pixel p:idmap.values()) {
+			if (!xymap.containsValue(p)) {
+				println("removed "+ p.x+","+p.y);
+				rem.add(p);
+			}
+		}
+		for (Pixel p:rem) {
+			idmap.remove(p.id);
+		}
 	}
 
 	private void calculateNeighbors(int minx, int maxx, int miny, int maxy) {
@@ -127,7 +137,6 @@ public class FacadeEntropy extends PApplet {
 			for (int y=miny;y<maxy+1;y++) {
 				Pixel pixel = xymap.get(combine(x,y));
 				if (pixel!=null) {
-
 					Integer top =  combine(x,y-1);
 					Integer bot =  combine(x,y+1);
 					Integer lef =  combine(x-1,y);
@@ -185,8 +194,8 @@ public class FacadeEntropy extends PApplet {
 		background(0,0,0);
 		dotDisplay();
 		if (text) textDisplay();
-		if (frameCount%100==0) rot = !rot;
-		if (frameCount%100==0) rx = (int) random(0f,10f);
+//		if (frameCount%100==0) rot = !rot;
+//		if (frameCount%100==0) rx = (int) random(0f,10f);
 //		if (frameCount%150==0) state = (int) random(0f,20f);
 		
 		executeState();
@@ -264,7 +273,7 @@ public class FacadeEntropy extends PApplet {
 	private void hor(Pixel p) {
 		if (p.y%3==0) p.on = true; else p.on = false;
 }
-	private void randomize(Pixel p) {
+	private void random(Pixel p) {
 			float random = random(0,1);
 			if (random > fillrate) p.on = true; else p.on = false;
 	}
@@ -330,7 +339,7 @@ public class FacadeEntropy extends PApplet {
 				case 6:dir=5;forwDiag(p);break;
 				case 7:dir=6;forwDiag(p);break;
 				case 8:dir=7;forwDiag(p);break;
-				case 11:randomize(p);break;
+				case 11:random(p);break;
 				case 12:checker(p);break;
 				case 13:checker2(p);break;
 				case 14:diag(p);break;
