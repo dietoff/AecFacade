@@ -22,22 +22,37 @@ public class FacadeEntropy extends PApplet {
 	private float fillrate = 0.5f;
 	AEC aec;
 	PFont font1;
-	// some parameters that turned out to work best for the font we're using
-//	private String font = "8bitOperatorPlus-Regular.ttf";
-	private String font = "../data/8bitOperatorPlus8-Regular.ttf"; //
-//	private String font = "../data/coders_crux.ttf"; 
-//	private String font = "../data/Minecraftia-Regular.ttf"; 
-//	private String font = "../data/FreePixel.ttf"; 
 	private float fontkern = 3;
-	float FONT_SIZE = 4;
-//	float FONT_OFFSET_Y = 0.12f;
-//	float FONT_SCALE_X = 2.669f;
-//	float FONT_SCALE_Y = 2.67f;
-	float FONT_SCALE_X = 2.88f;
-	float FONT_SCALE_Y = 2.86f;
-	float FONT_OFFSET_Y = 0.143f;
 
+//	private String font = "../data/coders_crux.ttf"; 
+//	float FONT_SIZE = 5;
+//	float FONT_SCALE_X = 3.155f;
+//	float FONT_SCALE_Y = 3.2f;
+//	float FONT_OFFSET_Y = 0.5f;
+//	float FONT_OFFSET_X = 0.5f;
 	
+//	private String font = "../data/8bitOperatorPlus8-Regular.ttf"; 
+//	float FONT_SIZE = 4;
+//	float FONT_SCALE_X = 2.885f;
+//	float FONT_SCALE_Y = 2.86f;
+//	float FONT_OFFSET_Y = 0.5f;
+//	float FONT_OFFSET_X = 0.5f;
+	
+	//Freepixel
+//	private String font = "../data/FreePixel.ttf"; 
+//	float FONT_SIZE = 6;
+//	float FONT_SCALE_X = 2.6589997f;
+//	float FONT_SCALE_Y = 2.67f;
+//	float FONT_OFFSET_X = 0.5f;
+//	float FONT_OFFSET_Y = 0.5f;
+//	
+	private String font = "../data/04B_03__.TTF";
+	float FONT_SIZE = 3;
+	float FONT_SCALE_X = 2.66f;
+	float FONT_SCALE_Y = 2.6f;
+	float FONT_OFFSET_Y = 0.5f;
+	float FONT_OFFSET_X = 0.5f;
+
 	private HashMap<Integer, Pixel> idmap;
 	private HashMap<Integer, Pixel> xymap;
 	private int state = 1;
@@ -176,6 +191,7 @@ public class FacadeEntropy extends PApplet {
 
 	public void draw() {
 		aec.beginDraw();
+		noSmooth();
 		background(0,0,0);
 		dotDisplay();
 		if (text) textDisplay();
@@ -198,7 +214,8 @@ public class FacadeEntropy extends PApplet {
 
 	private void textDisplay() {
 		noStroke();
-		fill(255,0,100,220);
+		noSmooth();
+		fill(255,0,100);
 		// determines the speed (number of frames between text movements)
 		int frameInterval = 3;
 		// min and max grid positions at which the text origin should be. we scroll from max (+40) to min (-80)
@@ -222,7 +239,7 @@ public class FacadeEntropy extends PApplet {
 			rotate(PI/2);
 			translate(-50,-43);
 		}
-		translate(x,y+FONT_OFFSET_Y);
+		translate(x+FONT_OFFSET_X,y+FONT_OFFSET_Y);
 
 		// scale the font up by fixed parameters so it fits our grid
 		scale(FONT_SCALE_X,FONT_SCALE_Y);
@@ -235,11 +252,11 @@ public class FacadeEntropy extends PApplet {
 		translate(0,-FONT_OFFSET_Y);
 		text(txt, 0, 8);
 
-		// draw the font glyph by glyph, because the default kerning doesn't align with our grid
-		//		for(int i = 0; i < textString.length(); i++)
-		//		{
-		//			text(textString.charAt(i), (float)(i*fontkern), 0);
-		//		}
+//		 draw the font glyph by glyph, because the default kerning doesn't align with our grid
+//				for(int i = 0; i < textString.length(); i++)
+//				{
+//					text(textString.charAt(i), (float)(i*fontkern), 0);
+//				}
 		popMatrix();
 	}
 
@@ -366,6 +383,10 @@ public class FacadeEntropy extends PApplet {
 		case '2':state=19;break;
 		case 'q':text=!text;break;
 		case 'w':rot=!rot;break;
+//		case ',':FONT_SCALE_X=FONT_SCALE_X+0.005f;println(FONT_SCALE_X);break;
+//		case '.':FONT_SCALE_X=FONT_SCALE_X-0.005f;println(FONT_SCALE_X);break;
+//		case ';':FONT_SCALE_Y=FONT_SCALE_Y+0.005f;println(FONT_SCALE_Y);break;
+//		case '/':FONT_SCALE_Y=FONT_SCALE_Y-0.005f;println(FONT_SCALE_Y);break;
 		case 'a':rx = Math.max(0,(rx-1)%reqList.size());break;
 		case 's':rx = Math.max(0,(rx+1)%reqList.size());break;
 		}
