@@ -24,10 +24,17 @@ public class FacadeEntropy extends PApplet {
 	PFont font1;
 	private float fontkern = 3;
 
-//	private String font = "../data/coders_crux.ttf"; 
-//	float FONT_SIZE = 5;
-//	float FONT_SCALE_X = 3.155f;
-//	float FONT_SCALE_Y = 3.2f;
+	private String font = "../data/coders_crux.ttf"; 
+	float FONT_SIZE = 5;
+	float FONT_SCALE_X = 3.155f;
+	float FONT_SCALE_Y = 3.2f;
+	float FONT_OFFSET_Y = 0.55f;
+	float FONT_OFFSET_X = 0.5f;
+	
+//	private String font = "../data/04B_03__.TTF";
+//	float FONT_SIZE = 3;
+//	float FONT_SCALE_X = 2.66f;
+//	float FONT_SCALE_Y = 2.6f;
 //	float FONT_OFFSET_Y = 0.5f;
 //	float FONT_OFFSET_X = 0.5f;
 	
@@ -46,12 +53,7 @@ public class FacadeEntropy extends PApplet {
 //	float FONT_OFFSET_X = 0.5f;
 //	float FONT_OFFSET_Y = 0.5f;
 //	
-	private String font = "../data/04B_03__.TTF";
-	float FONT_SIZE = 3;
-	float FONT_SCALE_X = 2.66f;
-	float FONT_SCALE_Y = 2.6f;
-	float FONT_OFFSET_Y = 0.5f;
-	float FONT_OFFSET_X = 0.5f;
+
 
 	private HashMap<Integer, Pixel> idmap;
 	private HashMap<Integer, Pixel> xymap;
