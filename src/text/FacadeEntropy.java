@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -24,19 +25,21 @@ public class FacadeEntropy extends PApplet {
 	PFont font1;
 	private float fontkern = 3;
 
-	private String font = "../data/coders_crux.ttf"; 
-	float FONT_SIZE = 5;
-	float FONT_SCALE_X = 3.155f;
-	float FONT_SCALE_Y = 3.2f;
-	float FONT_OFFSET_Y = 0.55f;
-	float FONT_OFFSET_X = 0.5f;
-	
 //	private String font = "../data/04B_03__.TTF";
 //	float FONT_SIZE = 3;
 //	float FONT_SCALE_X = 2.66f;
-//	float FONT_SCALE_Y = 2.6f;
+//	float FONT_SCALE_Y = 2.625f;
 //	float FONT_OFFSET_Y = 0.5f;
 //	float FONT_OFFSET_X = 0.5f;
+//	float FONT_OY2= -0.2f;
+	
+//	private String font = "../data/coders_crux.ttf"; 
+//	float FONT_SIZE = 5;
+//	float FONT_SCALE_X = 3.155f;
+//	float FONT_SCALE_Y = 3.114998f;
+//	float FONT_OFFSET_Y = 0.5f;
+//	float FONT_OFFSET_X = 0.5f;
+//	float FONT_OY2= -0.15f;
 	
 //	private String font = "../data/8bitOperatorPlus8-Regular.ttf"; 
 //	float FONT_SIZE = 4;
@@ -44,36 +47,52 @@ public class FacadeEntropy extends PApplet {
 //	float FONT_SCALE_Y = 2.86f;
 //	float FONT_OFFSET_Y = 0.5f;
 //	float FONT_OFFSET_X = 0.5f;
+//	float FONT_OY2= -0.15f;
 	
-	//Freepixel
-//	private String font = "../data/FreePixel.ttf"; 
-//	float FONT_SIZE = 6;
-//	float FONT_SCALE_X = 2.6589997f;
-//	float FONT_SCALE_Y = 2.67f;
-//	float FONT_OFFSET_X = 0.5f;
+//	private String font = "../data/slkscr.ttf"; 
+//	float FONT_SIZE = 3;
+//	float FONT_SCALE_X = 2.805f;
+//	float FONT_SCALE_Y = 2.725f;
 //	float FONT_OFFSET_Y = 0.5f;
-//	
+//	float FONT_OFFSET_X = 0.5f;
+//	float FONT_OY2= -0.0f;
+	
+	private String font = "../data/uni0553-webfont.ttf"; 
+	float FONT_SIZE = 3;
+	float FONT_SCALE_X = 2.670f;
+	float FONT_SCALE_Y = 2.625f;
+	float FONT_OFFSET_Y = 0.5f;
+	float FONT_OFFSET_X = 0.5f;
+	float FONT_OY2= -0.2f;
 
+//	private String font = "../data/MunroNarrow.ttf"; 
+//	float FONT_SIZE = 4;
+//	float FONT_SCALE_X = 2.5599976f;
+//	float FONT_SCALE_Y = 2.489996f;
+//	float FONT_OFFSET_Y = 0.5f;
+//	float FONT_OFFSET_X = 0.5f;
+//	float FONT_OY2= -0.0f;
 
 	private HashMap<Integer, Pixel> idmap;
 	private HashMap<Integer, Pixel> xymap;
 	private int state = 1;
 	private int dir = 0;
 	private boolean diag = true;
-	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=10";
+	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=100";
 	private boolean text;
 	private boolean loaded=false;
-	private String textString;
 	private boolean rot = false;
 	private HashMap<Integer, Request> reqMap;
 	private ArrayList<Request> reqList;
 	private boolean incoming = false;
 	private int rx = 0;
 	private int txtx=20;
+	private HashMap<Integer,Integer> timeline;
 
 	public void setup() {
 		thread("requestData");
 		reqMap = new HashMap<Integer, Request>();
+		timeline = new HashMap<Integer, Integer>();
 		reqList = new ArrayList<Request>();
 		frameRate(25);
 		size(1200, 400);
@@ -196,11 +215,12 @@ public class FacadeEntropy extends PApplet {
 		noSmooth();
 		background(0,0,0);
 		dotDisplay();
-		if (text) textDisplay();
+		if (text) {
+			textDisplay();
+		}
 		//		if (frameCount%100==0) rot = !rot;
 		//		if (frameCount%100==0) rx = (int) random(0f,10f);
 		//		if (frameCount%150==0) state = (int) random(0f,20f);
-
 		executeState();
 		aec.endDraw();
 		aec.drawSides();
@@ -216,8 +236,10 @@ public class FacadeEntropy extends PApplet {
 
 	private void textDisplay() {
 		noStroke();
-		noSmooth();
-		fill(255,0,100);
+				
+		fill(100,255,0);
+//		fill(255,0,100);
+//		fill(255,255,255);
 		// determines the speed (number of frames between text movements)
 		int frameInterval = 3;
 		// min and max grid positions at which the text origin should be. we scroll from max (+40) to min (-80)
@@ -231,6 +253,12 @@ public class FacadeEntropy extends PApplet {
 //		renderText(max(minPos, maxPos - (frameCount%loopFrames) / frameInterval), yPos, txt );
 		renderText(txtx, yPos, txt );
 
+	}
+
+	private double getDay(Request r) {
+		long datec = r.getDatec().getTime();
+		double diff = (System.currentTimeMillis()-datec)/(double)(3600000*24);
+		return diff;
 	}
 
 	void renderText(int x, int y, String txt)
@@ -249,10 +277,9 @@ public class FacadeEntropy extends PApplet {
 		textSize(FONT_SIZE);
 
 		text(txt, 0, 0);
-		translate(0,-FONT_OFFSET_Y);
-		text(txt, 0, 4);
-		translate(0,-FONT_OFFSET_Y);
 		text(txt, 0, 8);
+		translate(0,FONT_OY2);
+		text(txt, 0, 4);
 
 //		 draw the font glyph by glyph, because the default kerning doesn't align with our grid
 //				for(int i = 0; i < textString.length(); i++)
@@ -296,6 +323,10 @@ public class FacadeEntropy extends PApplet {
 		}
 	}
 
+	private void modeTimeline(Pixel p) {
+		if (p.x%2+p.y%2==1) p.on = true; else p.on = false;
+	}
+	
 	private void modechecker(Pixel p) {
 		if (p.x%2+p.y%2==1) p.on = true; else p.on = false;
 	}
@@ -385,10 +416,10 @@ public class FacadeEntropy extends PApplet {
 		case '2':state=19;break;
 		case 'q':text=!text;break;
 		case 'w':rot=!rot;break;
-//		case ',':FONT_SCALE_X=FONT_SCALE_X+0.005f;println(FONT_SCALE_X);break;
-//		case '.':FONT_SCALE_X=FONT_SCALE_X-0.005f;println(FONT_SCALE_X);break;
-//		case ';':FONT_SCALE_Y=FONT_SCALE_Y+0.005f;println(FONT_SCALE_Y);break;
-//		case '/':FONT_SCALE_Y=FONT_SCALE_Y-0.005f;println(FONT_SCALE_Y);break;
+		case ',':FONT_SCALE_X=FONT_SCALE_X+0.005f;println(FONT_SCALE_X);break;
+		case '.':FONT_SCALE_X=FONT_SCALE_X-0.005f;println(FONT_SCALE_X);break;
+		case ';':FONT_SCALE_Y=FONT_SCALE_Y+0.005f;println(FONT_SCALE_Y);break;
+		case '/':FONT_SCALE_Y=FONT_SCALE_Y-0.005f;println(FONT_SCALE_Y);break;
 		case 'a':rx = Math.max(0,(rx-1)%reqList.size());break;
 		case 's':rx = Math.max(0,(rx+1)%reqList.size());break;
 		}
@@ -402,7 +433,6 @@ public class FacadeEntropy extends PApplet {
 	public void requestData() throws ParseException {
 		JSONObject json = loadJSONObject(url);
 		JSONArray msg = json.getJSONArray("MESSAGELIST");
-		textString="";
 		for (int i = 0; i < msg.size(); i++) {
 
 			JSONObject m = msg.getJSONObject(i); 
@@ -416,23 +446,38 @@ public class FacadeEntropy extends PApplet {
 			r.setLat(m.getInt("lat",0));
 			r.setActive(m.getInt("active",0));
 			r.setDistrict(m.getString("district",""));
-			r.setDatec(DateFormat.getDateInstance().parse(m.getString("dateCreated")));
-			r.setDatem(DateFormat.getDateInstance().parse(m.getString("dateLastModified")));
+			DateFormat df = new SimpleDateFormat("MMM dd, yyyy hh:mm:ss a", Locale.ENGLISH);
+			r.setDatec(df.parse(m.getString("dateCreated")));
+			r.setDatem(df.parse(m.getString("dateLastModified")));
 
 			if (!reqMap.containsKey(r.getId())) {
-				// new report!
 				incoming  = true;
 				reqMap.put(r.getId(),r);
 				reqList.add(r);
+				
+				
 			}
 
-
 			String title = m.getString("title");
-			textString = textString+title+". ";
 		}
 		text = true;
+		createTimeline();
 	}
 
+	private void createTimeline() {
+		timeline = new HashMap<Integer, Integer>();
+		for (Request r:reqList) {
+			// increment timeline
+			int day = (int) getDay(r);
+			if (timeline.containsKey(day)) {
+				Integer ndays = timeline.get(day);
+				ndays++;
+				timeline.put(day, ndays);
+			} else {
+				timeline.put(day, 1);
+			}
+		}
+	}
 }
 
 
