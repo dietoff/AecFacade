@@ -8,11 +8,14 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
+
+import com.sun.tools.example.debug.gui.CurrentFrameChangedEvent;
 
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -29,16 +32,17 @@ public class FacadeEntropy extends PApplet {
 	AEC aec;
 	FacFont[] fontarray = { new FacFont(this, "../data/wendy.ttf", 5, 2f, 2.0f, 0.5f, 0.5f),
 			new FacFont(this, "../data/04B_03__.ttf", 4, 2f, 2f, 0.5f, 0.5f),
-			new FacFont(this,"../data/uni0553-webfont.ttf", 4, 2.f, 2.f, 0.5f, 0.5f)
+			new FacFont(this,"../data/uni0553-webfont.ttf", 4, 2.f, 2.f, 0.5f, 0.5f),
+			new FacFont(this,"../data/coders_crux.ttf", 8, 2.f, 2.f, 0.5f, 0.5f)
 	};
-	int fontnr = 2;
+	int fontnr = 3;
 	private HashMap<Integer, Pixel> idmap;
 	private HashMap<Integer, Pixel> xymap;
 	private ArrayList<Pixel> activePixels;
 	private int state = 1;
 	private int direction = 0;
 	private boolean friction = true;
-	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=150";
+	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=300";
 	private boolean textOn;
 	private boolean verticalText = false;
 	private HashMap<Integer, Request> reqMap;
@@ -61,15 +65,17 @@ public class FacadeEntropy extends PApplet {
 	private int startFrame=0;
 	private boolean schwund=false;
 	private PImage gifBG;
+	String imgfile[] = {"../data/11.gif","../data/11_w.gif","../data/10_w.gif","../data/10_fr.gif"};
+	int imgnr=1;
+	private PImage gifBG2;
 
 	public void setup() {
 		thread("requestData");
 		reqMap = new HashMap<Integer, Request>();
 		reqList = new ArrayList<Request>();
 		activePixels = new ArrayList<Pixel>();
-		gif = new Gif(this, "../data/10.gif");
-		gifBG = gif.get(0, 0, 1, 1);
-		gif.loop();
+		
+		genGif();
 		frameRate(25);
 		size(1200, 400);
 		readTopology();
@@ -81,6 +87,13 @@ public class FacadeEntropy extends PApplet {
 		aec.init();
 		frameRate(25);
 		noSmooth();
+	}
+
+	private void genGif() {
+		gif = new Gif(this, imgfile[imgnr]);
+		gifBG = gif.get(0, 0, 1, 1);
+		gifBG2 = gif.get(6, 19, 1, 1);
+		gif.loop();
 	}
 	
 	private void pullLottery(float perc){
@@ -208,30 +221,13 @@ public class FacadeEntropy extends PApplet {
 		aec.beginDraw();
 		
 		background(0,0,0);
-		dotDisplay();
-		if (textOn) {
-			textDisplay();
-		}
-		//		if (frameCount%100==0) rot = !rot;
-		//		if (frameCount%100==0) rx = (int) random(0f,10f);
-		//		if (frameCount%150==0) state = (int) random(0f,20f);
 		executeState();
-		
-		if (imgOn) animation();
-		
-//		fill(50);
-//		rect(0,0,20,20);
+		if (imgOn) imageDisplay();
+		dotDisplay();
+		if (textOn) textDisplay();
 		
 		aec.endDraw();
 		aec.drawSides();
-	}
-
-	private void animation() {
-		image(gif, 10f,2);
-		image(gif, 20f,2);
-		image(gif, 30f,2);
-		image(gifBG,40,2,32,20);
-		image(gifBG,0,2,10,20);
 	}
 
 	private void dotDisplay() {
@@ -266,12 +262,60 @@ public class FacadeEntropy extends PApplet {
 		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()); // loop point based on length of string
 		int loopFrames = (maxPos-minPos) * frameInterval;
 		
-		renderText(11, max(minPos, maxPos - ((frameCount-startFrame)%loopFrames) / frameInterval), txt );
-		renderText(8, max(minPos, maxPos - ((frameCount-startFrame)%loopFrames) / frameInterval), txt );
-		renderText(5, max(minPos, maxPos - ((frameCount-startFrame)%loopFrames) / frameInterval), txt );
-//		renderText(txtx, 10,txt );
+		int i = frameCount-startFrame;
+		if (i == loopFrames) {
+			initImage();incrementReq();return;
+		}
+		renderText(19, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(16, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(11, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(8, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(5, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		if (i<50) {
+			renderTextH(12, 3,request.getDatec().getDate()+"" );
+			renderTextH(8, 3,request.getDatec().getDate()+"" );
+			renderTextH(5, 3,request.getDatec().getDate()+"" );
+		}
+		
+//		fill(0);
+//		rect(30,25f,20,15);
 	}
 
+	
+	private void imageDisplay() {
+		if (frameCount-startFrame==300) {
+			initText();
+			return;
+		}
+		image(gif, 10f,2);
+		image(gif, 20f,2);
+		image(gif, 30f,2);
+		image(gifBG,40,2,32,20);
+		image(gifBG,0,2,10,20);
+		image(gifBG2,0,22,80,6);
+	}
+
+	void renderTextH(int x, int y, String txt)
+	{
+		// push & translate to the text origin
+		pushMatrix();
+		if (verticalText) {
+			rotate(PI/2);
+			translate(-50,-43);
+		}
+		FacFont f = fontarray[0];
+		translate(x+f.getFONT_OFFSET_X(),y+f.getFONT_OFFSET_Y());
+		
+		// scale the font up by fixed parameters so it fits our grid
+		scale(f.getFONT_SCALE_X(),f.getFONT_SCALE_Y());
+		
+		textFont(f.getFont());
+		textSize(f.getFONT_SIZE());
+		textAlign(CENTER);
+		text(txt, x,y);
+		popMatrix();
+	}
+	
 	void renderText(int x, int y, String txt)
 	{
 		// push & translate to the text origin
@@ -320,6 +364,7 @@ public class FacadeEntropy extends PApplet {
 				case 6:direction=5;forwDiag(p);break;
 				case 7:direction=6;forwDiag(p);break;
 				case 8:direction=7;forwDiag(p);break;
+				case 9:;break; // do nothing state
 				case 11:moderandom(p);break;
 				case 12:modechecker(p);break;
 				case 13:modechecker2(p);break;
@@ -342,11 +387,20 @@ public class FacadeEntropy extends PApplet {
 		}
 		else p.on = false;
 	}*/
+	private void dim() {
+		for (Pixel p:idmap.values()) {
+			p.color=p.color&0x60ffffff;
+		}
+		
+	}
 	
 	private void modeTimeline(Pixel p) {
 		int n=0;
 		int zeroline = 11;
 		int width = 20;
+		if ((p.x-10)>(frameCount-startFrame)/5) {
+			p.on=false;return;
+		}
 		if (timeline.containsKey(p.x%width)) n = timeline.get(p.x%width).size(); 
 		if (p.y<zeroline&&n>(zeroline-p.y-1)) {
 			 p.on = true;
@@ -452,34 +506,32 @@ public class FacadeEntropy extends PApplet {
 		FacFont f = fontarray[fontnr];
 //		aec.keyPressed(key);
 		switch(key) {
-		case 't':state=1;textOn=false;imgOn=false;;break;
-		case 'y':state=2;textOn=false;imgOn=false;break;
-		case 'h':state=3;textOn=false;imgOn=false;;break;
-		case 'n':state=4;textOn=false;imgOn=false;;break;
-		case 'b':state=5;textOn=false;imgOn=false;;break;
-		case 'v':state=6;textOn=false;imgOn=false;;break;
-		case 'f':state=7;textOn=false;imgOn=false;;break;
-		case 'r':state=8;textOn=false;imgOn=false;;break;
+		case 't':initState(1);break;
+		case 'y':initState(2);break;
+		case 'h':initState(3);break;
+		case 'n':initState(4);break;
+		case 'b':initState(5);break;
+		case 'v':initState(6);break;
+		case 'f':initState(7);break;
+		case 'r':initState(8);break;
 		case 'g':friction=!friction;break;
-		case '0':state=11;textOn=false;imgOn=false;break;
-		case '9':state=12;textOn=false;imgOn=false;break;
-		case '8':state=13;textOn=false;imgOn=false;break;
-		case '7':state=14;textOn=false;imgOn=false;break;
-		case '6':state=15;textOn=false;imgOn=false;break;
-		case '5':state=16;textOn=false;imgOn=false;break;
-		case '4':state=17;textOn=false;imgOn=false;break;
-		case '3':state=18;textOn=false;imgOn=false;break;
-		case '2':state=19;textOn=false;imgOn=false;break;
-		case '1':state=20;textOn=false;imgOn=false;break;
-		case 'q':startFrame=frameCount;textOn=!textOn;state=19;imgOn=false;break;
+		case '0':initState(11);break;
+		case '9':initState(12);break;
+		case '8':initState(13);break;
+		case '7':initState(14);break;
+		case '6':initState(15);break;
+		case '5':initState(16);break;
+		case '4':initState(17);break;
+		case '3':initState(18);break;
+		case '2':initState(19);break;
+		case '1':initTimeline();break;
+		case 'q':initText();break;
 		case 'w':schwund=!schwund;break;
-		case 'e':imgOn=!imgOn;textOn=false;state=19;break;
-		case ',':f.setFONT_SCALE_X(f.getFONT_SCALE_X()+0.005f);println(f.getFONT_SCALE_X());break;
-		case '.':f.setFONT_SCALE_X(f.getFONT_SCALE_X()-0.005f);println(f.getFONT_SCALE_X());break;
-		case ';':f.setFONT_SCALE_Y(f.getFONT_SCALE_Y()+0.005f);println(f.getFONT_SCALE_Y());break;
-		case '/':f.setFONT_SCALE_Y(f.getFONT_SCALE_Y()-0.005f);println(f.getFONT_SCALE_Y());break;
+		case 'e':initImage();break;
 		case 'a':reqNr = Math.max(0,(reqNr-1)%reqList.size());break;
-		case 's':reqNr = Math.max(0,(reqNr+1)%reqList.size());break;
+		case 's':incrementReq();break;
+		case '=':imgnr = (imgnr+1)%4;genGif(); break;
+		case '-':fontnr = (fontnr+1)%fontarray.length;
 		}
 		
 		switch(keyCode) {
@@ -487,6 +539,29 @@ public class FacadeEntropy extends PApplet {
 		case LEFT:txtx--;break;
 		}
 	}
+
+	private void incrementReq() {
+		reqNr = Math.max(0,(reqNr+1)%reqList.size());
+	}
+
+	private void initImage() {
+		startFrame=frameCount;imgOn=true;textOn=false;state=19;
+	}
+
+	private void initTimeline() {
+		state=20;textOn=false;imgOn=false;startFrame=frameCount;
+	}
+
+	private void initText() {
+//		dim();
+		startFrame=frameCount;textOn=true;state=19;imgOn=false;
+	}
+
+	private void initState(int n) {
+		state=n;textOn=false;imgOn=false;
+	}
+
+	
 
 	
 	public void requestFont() {
