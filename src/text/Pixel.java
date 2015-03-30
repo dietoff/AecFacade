@@ -20,6 +20,7 @@ public class Pixel {
 	HashMap<String,Pixel> neighbors = new HashMap<String,Pixel>();
 	HashMap<Integer,Pixel> nbhd = new HashMap<Integer,Pixel>();
 	public Boolean on = false;
+	public int color = 0xffffffff;
 
 
 	public Pixel(int id_, int x_, int y_, int w_) {
