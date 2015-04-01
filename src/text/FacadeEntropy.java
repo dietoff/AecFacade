@@ -62,9 +62,9 @@ public class FacadeEntropy extends PApplet {
 	private boolean stop = false;
 	private char keysent;
 	Gif gif;
-	private int unerledigt = color(200);
+	private int unerledigt = color(150);
 	private int erledigt = color(120);
-	private int inBearb = color(230);
+	private int inBearb = color(210);
 	private int na = color(255);
 	private boolean imgOn = false;
 	private int startFrame=0;
