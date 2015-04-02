@@ -276,7 +276,7 @@ public class FacadeEntropy extends PApplet {
 		if (s==200) {initState(11);perc=0.3f;return;}// random
 		if (s>150&&s<200) {randomPattern();return;}
 		if (s==50) {initImage();return;}
-		if (s>0&&s<50) {randomPattern();perc=0.8f;return;}
+		if (s>0&&s<50) {randomPattern();perc=1f;return;}
 	}
 	
 	public void randomPattern() {
@@ -345,6 +345,13 @@ public class FacadeEntropy extends PApplet {
 		String[] split = txt.split(" ");
 		txt = split[0];
 		int maxPos = 35;
+		txt = txt.replace("_", " ");
+		txt = txt.replace(":", " ");
+		txt = txt.replace(" ca ", " circa ");
+		txt = txt.replace(" cm ", " centimeter ");
+		txt = txt.replace(" m ", " meter ");
+		txt = txt.replace(" h ", " stunde ");
+		txt = txt.replace(" nr ", " nummer ");
 		FacFont f = fontarray[fontnr];
 		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()*.5f); // loop point based on length of string
 		

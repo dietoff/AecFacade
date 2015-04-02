@@ -1,30 +1,20 @@
-THEMA-1 - zeit - fehlt - frage - längerer - schranken - letzter - bleibt - geschlossen - paar - stellt.
-THEMA-2 - uhr - tag - ca - woche - abend - zeit - wochenende - h - fenster - früh.
-THEMA-3 - fahrräder - promenade - stellt - hauptplatz - alten - fußgängerzone - altstadt - blumen - fahrradständer - lessingstraße.
-THEMA-4 - parkplatz - kennzeichen - parken - parkplätze - auto - autos - stehen - verboten - polizei - tag.
-THEMA-5 - wc - toilette - zumutung - öffentliche - luft - öffentlichen - gestank - anlage - mensch - gäste.
-THEMA-6 - einzige - gehört - see - erde - wohnungen - pichlinger - nächsten - gebaut - problem - foto.
-THEMA-7 - bäume - baum - sträucher - jahren - entlang - äste - gehsteig - gras - grundstück - ast.
-THEMA-8 - nadel - haus - ca - wochen - befindet - gegenüber - bereich - baustelle - ecke - worden.
-THEMA-9 - linz - meldung - team - entfernt - sal - meldungen - anliegen - app - jahr - foto.
-THEMA-10 - müll - liegen - mistkübel - bitte - herum - gehsteig - entsorgt - verschmutzt - sperrmüll - entsorgen.
-THEMA-11 - radweg - geh - rad - radfahrer - radfahrerinnen - radweges - gitter - gehweg - bushaltestelle - eisenbahnbrücke.
-THEMA-12 - gehsteig - radfahrer - fahrbahn - straße - radweg - fußgänger - zebrastreifen - stelle - gefährlich - teilweise.
-THEMA-13 - bitte - entfernen - stelle - voraus - reinigung - zuständig - gehört - dringend - stellen - ersuche.
-THEMA-14 - autos - straße - kreuzung - fahrzeuge - fahren - verkehr - situationen - parkverbot - sicht - stehen.
-THEMA-15 - wasser - regen - kanal - verstopft - läuft - ball - große - ebelsberg - brunnen - hochwasser.
-THEMA-16 - km/h - zone - straße - fahren - polizei - autofahrer - maßnahmen - geschwindigkeit - autos - tempo.
-THEMA-17 - e - weise - junge - einfallen - n - ziemlich - auskunft - sowieso - extreme - anfangs.
-THEMA-18 - defekt - ausgefallen - unterführung - bitte - beleuchtung - straßenbeleuchtung - reparatur - laterne - licht - nr.
-THEMA-19 - haltestelle - richtung - bus - bushaltestelle - linie - straßenbahn - fahrtrichtung - defekt - funktioniert - bim.
-THEMA-20 - foto - (siehe - bild - ecke - wegmachen - city - kaplanhofstrasse - scheint - holzstrasse - fotos.
-THEMA-21 - kinder - personen - kindern - nähe - leute - täglich - polizei - problem - ständig - kleine.
-THEMA-22 - bereich - richtung - donaulände - urfahr - nibelungenbrücke - linzer - donau - vorhanden - brücke - hauptplatz.
-THEMA-23 - linz - stadt - hunde - ag - hund - park - linzer - laufen - spielplatz - gerne.
-THEMA-24 - spur - stau - busspur - spuren - geradeaus - rechte - abbiegen - reicht - kreuzung - gerne.
-THEMA-25 - kreuzung - richtung - ampel - kommend - straße - rot - grün - autofahrer - zebrastreifen - fußgänger.
-THEMA-26 - tauben - bürgerservice - bürger - magistrat - frauen - linzer - zuständig - rathaus - herrn - möglichkeit.
-THEMA-27 - container - müll - aufgestellt - voll - containern - überfüllt - möglichkeit - sammelstelle - aufzustellen - altpapiercontainer.
-THEMA-28 - schaffen - a - b - abhilfe - winterhafen - hafenstraße - vis - zusätzlich - bindermichl - hotel.
-THEMA-29 - herren - damen - genehmigung - geplant - hauptstraße - bau - firma - leithenfeldweg - hoppichlerstraße - häusern.
-THEMA-30 - magistrat - mitarbeiter - antwort - fragen - schöner - fa - vorschlag - straßenreinigung - erfolg - versucht.
+THEMA_1: wasser - genehmigung - auskunft - ball - anblick - firma - zaun - offensichtlich - schöner - bewohner.
+THEMA_2: haltestelle - richtung - km/h - herren - bus - damen - linie - funktioniert - bushaltestelle - straßenbahn.
+THEMA_3: meldung - antwort - meldungen - magistrat - app - fragen - z.b - frauen - stadlerstrasse - herrn.
+THEMA_4: autos - parken - stehen - bereich - parkplatz - polizei - parkplätze - fahrzeuge - parkverbot - auto.
+THEMA_5: kennzeichen - auto - parkplatz - wochen - kfz - monaten - parkt - öffentlichen - xxx - fahrzeug.
+THEMA_6: kreuzung - richtung - kommend - fahren - autos - situationen - verkehr - abbiegen - rechten - spur.
+THEMA_7: tauben - stadion - altstadt - markt - veranstaltungen - genügend - beton - schienen - maßnahme - füttern.
+THEMA_8: ampel - defekt - ausgefallen - kreuzung - rot - grün - straße - beleuchtung - licht - fußgänger.
+THEMA_9: linz - stadt - linzer - ag - endlich - team - anliegen - magistrat - zuständig - jahr.
+THEMA_10: zeit - fenster - längerer - schlafen - siedlung - sinne - mensch - frage - letzter - gesamte.
+THEMA_11: radweg - radfahrer - gehsteig - fahrbahn - gehweg - brücke - bereich - fußgänger - teilweise - ausweichen.
+THEMA_12: city - nochmals - räder - ordentlich - unionstrasse - solar - stock - grundbachweg - grünstreifen - obus.
+THEMA_13: müll - liegen - bitte - mistkübel - herum - entsorgt - sperrmüll - gehsteig - entfernen - entsorgen.
+THEMA_14: kinder - hunde - park - personen - spielplatz - kindern - hund - leute - stadtwache - unterwegs.
+THEMA_15: uhr - tag - woche - ca - zeit - abend - abends - früh - anrainer - sonntag.
+THEMA_16: straße - nadel - bitte - zebrastreifen - foto - höhe - a - befindet - lange - bild.
+THEMA_17: ca - jahr - fahrbahn - paar - m - regen - wasser - meter - befindet - cm.
+THEMA_18: haus - baustelle - tagen - nr - gehsteig - u - wochen - worden - monaten - schild.
+THEMA_19: wc - toilette - garten - öffentlichen - rathaus - zumutung - luft - frechheit - gestank - anlage.
+THEMA_20: bitte - entfernen - bäume - wochen - reparatur - reinigung - sträucher - voraus - unterführung - verschmutzt
