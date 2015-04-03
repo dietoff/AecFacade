@@ -42,7 +42,7 @@ public class FacadeEntropy extends PApplet {
 	
 	AEC aec;
 	FacFont[] fontarray = { new FacFont(this, "../data/wendy.ttf", 5, 2f, 2.0f, 0.5f, 0.5f),
-			new FacFont(this, "../data/04B_03__.ttf", 4, 2f, 2f, 0.5f, 0.5f),
+			new FacFont(this, "../data/04B_03__.TTF", 4, 2f, 2f, 0.5f, 0.5f),
 			new FacFont(this,"../data/uni0553-webfont.ttf", 4, 2.f, 2.f, 0.5f, 0.5f),
 			new FacFont(this,"../data/coders_crux.ttf", 8, 2.f, 2.f, 0.5f, 0.5f)
 	};
