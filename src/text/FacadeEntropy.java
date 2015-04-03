@@ -31,11 +31,15 @@ import processing.data.JSONObject;
 import processing.data.Table;
 import processing.data.TableRow;
 
+/**
+ * @author dietmar offenhuber d.offenhuber@neu.edu, based on AEC facade templates
+ * http://offenhuber.net
+ */
 public class FacadeEntropy extends PApplet {
 
-//	private float perc = .15f;
-	private float perc = 1f;
-	private float fillrate = 0.5f;
+//	private String url = "../data/sample.json";
+	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=400";
+	
 	AEC aec;
 	FacFont[] fontarray = { new FacFont(this, "../data/wendy.ttf", 5, 2f, 2.0f, 0.5f, 0.5f),
 			new FacFont(this, "../data/04B_03__.ttf", 4, 2f, 2f, 0.5f, 0.5f),
@@ -46,43 +50,48 @@ public class FacadeEntropy extends PApplet {
 	private HashMap<Integer, Pixel> idmap;
 	private HashMap<Integer, Pixel> xymap;
 	private ArrayList<Pixel> activePixels;
-	private int state = 1;
-	private int direction = 0;
+	private int state = 1;	// state
+	private int direction = 0; // direction of gravity
+	private int frameInterval; // speed of text
+	private float perc = 0.3f;
+	private int startFrame=0;
+	private int episodeFrame=0;
+	
 	private boolean friction = true;
-	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=400";
 	private boolean textOn;
 	private boolean verticalText = false;
+	private boolean stop = false;
+	private boolean incoming = false;
+	private boolean imgOn = false;
+	private boolean schwund=false;
+	private boolean thema = false;
+	private boolean newReport = false;
+	private boolean salOn=false;
+	
 	private HashMap<Integer, Request> reqMap;
 	private ArrayList<Request> reqList;
-	private boolean incoming = false;
 	private int reqNr = 0;
-	private int txtx = 11;
 	private HashMap<Integer,ArrayList<Request>> timeline;
 	private HashMap<Integer, ArrayList<Request>> timelineErledigt;
-	private boolean stop = false;
-	private char keysent;
-	Gif gif;
+	
+	private Gif gif;
+	private PImage sal;
+	private PImage neu;
+	private PImage gifBG;
+	private PImage gifBG2;
+	String imgfile[] = {"../data/11.gif","../data/11_w.gif","../data/10_w.gif","../data/10_fr.gif"};
+	int imgnr=2;
+	
+	// colors
 	private int unerledigt = color(150);
 	private int erledigt = color(120);
 	private int inBearb = color(210);
 	private int na = color(255);
-	private boolean imgOn = false;
-	private int startFrame=0;
-	private int episodeFrame=0;
-	private boolean schwund=false;
-	private PImage gifBG;
-	String imgfile[] = {"../data/11.gif","../data/11_w.gif","../data/10_w.gif","../data/10_fr.gif"};
-	int imgnr=2;
-	private PImage gifBG2;
-	private String[] voices = {"Anna","Markus", "Petra", "Yannick"};
+	
+	// array for topic maps
 	private String[] themen;
 	private int th = 0;
-	private boolean thema = false;
-	private boolean newReport = false;
-	private PImage sal;
-	private PImage neu;
-	private boolean salOn=false;
-	private int frameInterval;
+	
 
 	public void setup() {
 		thread("requestData");
@@ -90,10 +99,10 @@ public class FacadeEntropy extends PApplet {
 		reqList = new ArrayList<Request>();
 		activePixels = new ArrayList<Pixel>();
 
-		genGif();
+		initializeGif();
 		frameRate(25);
 		size(1200, 400);
-		readTopology();
+		readFacadeTopology();
 		for (Pixel p:idmap.values()) moderandom(p);
 
 		for (int i=0; i< fontarray.length;i++) fontarray[i].createFont();
@@ -107,7 +116,7 @@ public class FacadeEntropy extends PApplet {
 		neu = loadImage("../data/report.png");
 	}
 
-	private void genGif() {
+	private void initializeGif() {
 		gif = new Gif(this, imgfile[imgnr]);
 		gifBG = gif.get(0, 0, 1, 1);
 		gifBG2 = gif.get(6, 19, 1, 1);
@@ -115,7 +124,7 @@ public class FacadeEntropy extends PApplet {
 	}
 
 
-	private ArrayList<Pixel> shuffle() {
+	private ArrayList<Pixel> shufflePixels() {
 		ArrayList<Pixel> v2 = new ArrayList<Pixel>(); 
 		v2.addAll(idmap.values());
 		Collections.shuffle(v2);
@@ -123,7 +132,7 @@ public class FacadeEntropy extends PApplet {
 	}
 
 
-	private void readTopology() {
+	private void readFacadeTopology() {
 		Table table = loadTable("../data/window2mask_crop.csv", "header");
 		idmap = new HashMap<Integer, Pixel>();
 		xymap = new HashMap<Integer, Pixel>();
@@ -146,14 +155,14 @@ public class FacadeEntropy extends PApplet {
 			int w = row.getInt("width");
 			Pixel pix = new Pixel(id,x,y,w);
 			idmap.put(id, pix);
-			xymap.put(combine(x, y), pix);
+			xymap.put(combineXY(x, y), pix);
 		}
 
 		for (Pixel p:idmap.values()) {
 			if (!xymap.values().contains(p)) println(p.id);
 		}
 
-		calculateNeighbors(minx, maxx, miny, maxy);
+		calculatePixelNeighbors(minx, maxx, miny, maxy);
 
 		//remove duplicate pixels per x,y
 		ArrayList<Pixel> rem = new ArrayList<Pixel>();
@@ -165,20 +174,20 @@ public class FacadeEntropy extends PApplet {
 		for (Pixel p:rem) idmap.remove(p.id);
 	}
 
-	private void calculateNeighbors(int minx, int maxx, int miny, int maxy) {
+	private void calculatePixelNeighbors(int minx, int maxx, int miny, int maxy) {
 		// calculate neighbors
 		for (int x=minx;x<maxx+1;x++) {
 			for (int y=miny;y<maxy+1;y++) {
-				Pixel pixel = xymap.get(combine(x,y));
+				Pixel pixel = xymap.get(combineXY(x,y));
 				if (pixel!=null) {
-					Integer top =  combine(x,y-1);
-					Integer bot =  combine(x,y+1);
-					Integer lef =  combine(x-1,y);
-					Integer rig =  combine(x+1,y);
-					Integer tr =  combine(x+1,y-1);
-					Integer bl =  combine(x-1,y+1);
-					Integer tl =  combine(x-1,y-1);
-					Integer br =  combine(x+1,y+1);
+					Integer top =  combineXY(x,y-1);
+					Integer bot =  combineXY(x,y+1);
+					Integer lef =  combineXY(x-1,y);
+					Integer rig =  combineXY(x+1,y);
+					Integer tr =  combineXY(x+1,y-1);
+					Integer bl =  combineXY(x-1,y+1);
+					Integer tl =  combineXY(x-1,y-1);
+					Integer br =  combineXY(x+1,y+1);
 
 					if (xymap.containsKey(top)) {
 						Pixel px = xymap.get(top);
@@ -218,7 +227,7 @@ public class FacadeEntropy extends PApplet {
 		}
 	}
 
-	private int combine(int x, int y) {
+	private int combineXY(int x, int y) {
 		return x|(y<<8);
 	}
 
@@ -233,13 +242,17 @@ public class FacadeEntropy extends PApplet {
 		if (salOn&&!newReport) imageDisplay(sal);
 		if (salOn&&newReport) imageDisplay(neu);
 		
-		dotDisplay();
+		pixelDisplay();
 		if (textOn&&!thema) textDisplay();
 		if (textOn&&thema) themaDisplay();
 		aec.endDraw();
 		aec.drawSides();
 	}
 
+	
+	/**
+	 *  This is the main scheduler of the display sequence - switch states
+	 */
 	private void scheduler() {
 		float s = frameCount-startFrame;
 		if (s==550) {initText();return;}
@@ -250,185 +263,26 @@ public class FacadeEntropy extends PApplet {
 		if (s==230) {salOn=false;perc=0.3f;initTimeline();newReport=false;return;}
 		if (s>170&&s<230) {initLogo();return;}
 		if (s==170) {initState(11);return;}// random
-		if (s>140&&s<170) {randomPattern();return;}
+		if (s>140&&s<170) {modeRandomPattern();return;}
 		if (s==30) {initImage();return;}
-		if (s>0&&s<30) {randomPattern();perc=1f;return;}
+		if (s>0&&s<30) {modeRandomPattern();perc=1f;return;}
 	}
 
-	private void initLogo() {
-		initState(19);salOn=true;imgOn=false;
-	}
-	
-	private void dotDisplay() {
-		stroke(255,255,255);
-		if(!friction) point(1,1);
-		for (Pixel p:idmap.values()) {
-			if (p.on) {
-				stroke(p.color);
-				point(p.x,p.y);
-			}
-		}
-	}
-
-	private void textDisplay() {
-		noStroke();
-		// determines the speed (number of frames between text movements)
-		frameInterval = 4;
-
-		Request request = reqList.get(reqNr);
-		while (request.played) {
-			request = reqList.get(reqNr);
-			incrementReq();
-			if (reqNr==reqList.size()-1) {
-				reqNr=0;
-				for (Request r:reqList) r.played=false;
-			}
-		}
-		
-		fill(na);
-
-
-		String txt = request.getTitle();
-		String[] split = txt.split(" ");
-		txt = split[0];
-		int maxPos = 35;
-		FacFont f = fontarray[fontnr];
-		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()*.5f); // loop point based on length of string
-		
-		int loopFrames = (maxPos-minPos) * frameInterval;
-		int i = frameCount-episodeFrame;
-		if (i == loopFrames) {
-			incrementReq();
-			restart();
-			thema=true;
-			return;
-		}
-		renderText(19, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(16, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(11, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(8, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(5, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		if (i<50) {
-			renderTextH(12, 3,request.getDatec().getDate()+"" );
-			renderTextH(8, 3,request.getDatec().getDate()+"" );
-			renderTextH(5, 3,request.getDatec().getDate()+"" );
-		}
-	}
-
-	
-	private void themaDisplay() {
-		noStroke();
-		frameInterval = 4;
-
-		fill(na);
-
-		String txt = themen[th];
-		String[] split = txt.split(" ");
-		txt = split[0];
-		int maxPos = 35;
-		txt = txt.replace("_", " ");
-		txt = txt.replace(":", " ");
-		txt = txt.replace(" ca ", " circa ");
-		txt = txt.replace(" cm ", " centimeter ");
-		txt = txt.replace(" m ", " meter ");
-		txt = txt.replace(" h ", " stunde ");
-		txt = txt.replace(" nr ", " nummer ");
-		FacFont f = fontarray[fontnr];
-		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()*.5f); // loop point based on length of string
-		
-		int loopFrames = (maxPos-minPos) * frameInterval;
-		int i = frameCount-episodeFrame;
-		if (i == loopFrames) {
-			th = (th+1)%themen.length;
-			thema=false;
-			restart();
-			return;
-		}
-		renderText(19, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(16, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(11, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(8, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-		renderText(5, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
-	}
-	
-
-	private void restart() {
+	/**
+	 *  restart scheduler, loop
+	 */
+	private void restartScheduler() {
 		startFrame=frameCount;
 		schwund=false;
 		friction=true;
 		return;
 	}
 
-	private void gifDisplay() {
-		image(gif, 10f,2);
-		image(gif, 20f,2);
-		image(gif, 30f,2);
-		image(gifBG,40,2,32,20);
-		image(gifBG,0,2,10,20);
-		image(gifBG2,0,22,80,6);
-	}
-	
-	private void imageDisplay(PImage p) {
-		image(p,20f,2);
-		image(gifBG,40,2,32,20);
-		image(gifBG,0,2,10,20);
-		image(gifBG2,0,22,80,6);
-	}
-
-	void renderTextH(int x, int y, String txt)
-	{
-		// push & translate to the text origin
-		pushMatrix();
-		if (verticalText) {
-			rotate(PI/2);
-			translate(-50,-43);
-		}
-		FacFont f = fontarray[0];
-		translate(x+f.getFONT_OFFSET_X(),y+f.getFONT_OFFSET_Y());
-
-		// scale the font up by fixed parameters so it fits our grid
-		scale(f.getFONT_SCALE_X(),f.getFONT_SCALE_Y());
-
-		textFont(f.getFont());
-		textSize(f.getFONT_SIZE());
-		textAlign(CENTER);
-		text(txt, x,y);
-		popMatrix();
-	}
-
-	void renderText(int x, int y, String txt)
-	{
-		// push & translate to the text origin
-		pushMatrix();
-		if (verticalText) {
-			rotate(PI/2);
-			translate(-50,-43);
-		}
-		FacFont f = fontarray[fontnr];
-		translate(x+f.getFONT_OFFSET_X(),y+f.getFONT_OFFSET_Y());
-
-		// scale the font up by fixed parameters so it fits our grid
-		scale(f.getFONT_SCALE_X(),f.getFONT_SCALE_Y());
-
-		textFont(f.getFont());
-		textSize(f.getFONT_SIZE());
-		textAlign(CENTER);
-
-		for(int i = 0; i < txt.length(); i++)
-		{
-			text(txt.charAt(i), x,(float)(i*4));
-		}
-		popMatrix();
-	}
-
-	private double getDay(Request r) {
-		long datec = r.getDatec().getTime();
-		double diff = (System.currentTimeMillis()-datec)/(double)(3600000*24);
-		return diff;
-	}
-
+	/**
+	 * do everything necessary when changing states
+	 */
 	private void executeState() {
-		ArrayList<Pixel> a = shuffle();
+		ArrayList<Pixel> a = shufflePixels();
 		for (int i = 0; i< a.size()*perc; i++ ) {
 			Pixel p = a.get(i);
 			if (schwund) {
@@ -460,8 +314,236 @@ public class FacadeEntropy extends PApplet {
 		}
 	}
 
+	/**
+	 * 
+	 * initialize state helper methods
+	 * 
+	 * 
+	 */
+	private void initLogo() {
+		initState(19);salOn=true;imgOn=false;
+	}
 
-	public void randomPattern() {
+	private void initImage() {
+		imgOn=true;textOn=false;state=19;
+	}
+
+	private void initTimeline() {
+		episodeFrame = frameCount; state=20;textOn=false;imgOn=false;
+	}
+
+	private void initText() {
+		episodeFrame = frameCount; textOn=true;state=19;imgOn=false; thread("speak");
+		println(reqList.get(reqNr).getTitle());
+	}
+
+	private void initState(int n) {
+		state=n;textOn=false;imgOn=false;
+	}
+
+	/**
+	 *  draw facade pixels
+	 */
+	private void pixelDisplay() {
+		stroke(255,255,255);
+		if(!friction) point(1,1);
+		for (Pixel p:idmap.values()) {
+			if (p.on) {
+				stroke(p.color);
+				point(p.x,p.y);
+			}
+		}
+	}
+	
+	/**
+	 * draw vertical running text
+	 */
+	private void textDisplay() {
+		noStroke();
+		// determines the speed (number of frames between text movements)
+		frameInterval = 4;
+
+		Request request = reqList.get(reqNr);
+		while (request.played) {
+			request = reqList.get(reqNr);
+			incrementReq();
+			if (reqNr==reqList.size()-1) {
+				reqNr=0;
+				for (Request r:reqList) r.played=false;
+			}
+		}
+		
+		fill(na);
+		String txt = request.getTitle();
+		String[] split = txt.split(" ");
+		txt = split[0];
+		int maxPos = 35;
+		FacFont f = fontarray[fontnr];
+		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()*.5f); // loop point based on length of string
+		
+		int loopFrames = (maxPos-minPos) * frameInterval;
+		int i = frameCount-episodeFrame; // episode frame marks the beginning of the loop
+		if (i == loopFrames) {
+			incrementReq();
+			restartScheduler();
+			thema=true;
+			return;
+		}
+		renderText(19, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(16, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(11, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(8, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(5, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		if (i<50) {
+			renderTextH(12, 3,request.getDatec().getDate()+"." );
+			renderTextH(8, 3,request.getDatec().getDate()+"." );
+			renderTextH(5, 3,request.getDatec().getDate()+"." );
+		}
+	}
+
+	/**
+	 *  generate thema text (interspersed with requests)
+	 */
+	private void themaDisplay() {
+		noStroke();
+		frameInterval = 4;
+
+		fill(na);
+
+		String txt = themen[th];
+		String[] split = txt.split(" ");
+		txt = split[0];
+		int maxPos = 35;
+		txt = txt.replace("_", " ");
+		txt = txt.replace(":", " ");
+		txt = txt.replace(" ca ", " circa ");
+		txt = txt.replace(" cm ", " centimeter ");
+		txt = txt.replace(" m ", " meter ");
+		txt = txt.replace(" h ", " stunde ");
+		txt = txt.replace(" nr ", " nummer ");
+		FacFont f = fontarray[fontnr];
+		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()*.5f); // loop point based on length of string
+		
+		int loopFrames = (maxPos-minPos) * frameInterval;
+		int i = frameCount-episodeFrame;
+		if (i == loopFrames) {
+			th = (th+1)%themen.length;
+			thema=false;
+			restartScheduler();
+			return;
+		}
+		renderText(19, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(16, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(11, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(8, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+		renderText(5, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
+	}
+	
+	/**
+	 * render gif animation
+	 */
+	private void gifDisplay() {
+		image(gif, 10f,2);
+		image(gif, 20f,2);
+		image(gif, 30f,2);
+		image(gifBG,40,2,32,20);
+		image(gifBG,0,2,10,20);
+		image(gifBG2,0,22,80,6);
+	}
+	
+	/**
+	 * render a given PImage at standard position
+	 */
+	private void imageDisplay(PImage p) {
+		image(p,20f,2);
+		image(gifBG,40,2,32,20);
+		image(gifBG,0,2,10,20);
+		image(gifBG2,0,22,80,6);
+	}
+
+	/**
+	 * render horizontal text (used for date)
+	 * @param x
+	 * @param y
+	 * @param txt
+	 */
+	void renderTextH(int x, int y, String txt)
+	{
+		// push & translate to the text origin
+		pushMatrix();
+		if (verticalText) {
+			rotate(PI/2);
+			translate(-50,-43);
+		}
+		FacFont f = fontarray[0];
+		translate(x+f.getFONT_OFFSET_X(),y+f.getFONT_OFFSET_Y());
+
+		// scale the font up by fixed parameters so it fits our grid
+		scale(f.getFONT_SCALE_X(),f.getFONT_SCALE_Y());
+
+		textFont(f.getFont());
+		textSize(f.getFONT_SIZE());
+		textAlign(CENTER);
+		text(txt, x,y);
+		popMatrix();
+	}
+
+	/**
+	 * render vertical scrolling text
+	 * @param x
+	 * @param y
+	 * @param txt
+	 */
+	void renderText(int x, int y, String txt)
+	{
+		// push & translate to the text origin
+		pushMatrix();
+		if (verticalText) {
+			rotate(PI/2);
+			translate(-50,-43);
+		}
+		FacFont f = fontarray[fontnr];
+		translate(x+f.getFONT_OFFSET_X(),y+f.getFONT_OFFSET_Y());
+
+		// scale the font up by fixed parameters so it fits our grid
+		scale(f.getFONT_SCALE_X(),f.getFONT_SCALE_Y());
+
+		textFont(f.getFont());
+		textSize(f.getFONT_SIZE());
+		textAlign(CENTER);
+
+		for(int i = 0; i < txt.length(); i++)
+		{
+			text(txt.charAt(i), x,(float)(i*4));
+		}
+		popMatrix();
+	}
+
+	/**
+	 * calculate delta time of message from today in days
+	 * @param r
+	 * @return
+	 */
+	private double getDay(Request r) {
+		long datec = r.getDatec().getTime();
+		double diff = (System.currentTimeMillis()-datec)/(double)(3600000*24);
+		return diff;
+	}
+	
+	//
+
+	private void incrementReq() {
+		reqNr = Math.max(0,(reqNr+1)%reqList.size());
+	}
+
+	/**
+	 * 
+	 * the following are for generating the patterns for different states
+	 * 
+	 * 
+	 * 
+	 */
+	private void modeRandomPattern() {
 		int random = (int) random(10,19);
 		if (random == 10 || random == 18) initImage();
 		else
@@ -533,7 +615,7 @@ public class FacadeEntropy extends PApplet {
 
 	private void moderandom(Pixel p) {
 		if (!p.on) return;
-		ArrayList<Pixel> shuffle = shuffle();
+		ArrayList<Pixel> shuffle = shufflePixels();
 		Pixel pixel = shuffle.get(0);
 		if (!pixel.on) {
 			p.on=false;
@@ -543,12 +625,25 @@ public class FacadeEntropy extends PApplet {
 		} 
 	}
 
-	// move 
+	/**
+	 * 
+	 * move pixels forward in given direction
+	 * @param dir
+	 * @param p
+	 * @return
+	 */
 	private boolean forward(int dir,Pixel p) {if (canGo(dir,p)) {
 		move(dir,p);
 		return true;
 	} else return false;
 	}
+	
+//	
+	/**
+	 * 
+	 * move pixels forward in given direction, plus let them settle down
+	 * @param p
+	 */
 	private void forwDiag(Pixel p) {
 		if (!p.on) return;
 		if (forward(direction,p)); else {
@@ -569,6 +664,12 @@ public class FacadeEntropy extends PApplet {
 		}
 	}
 
+//	
+	/**
+	 * move pixel in given direction
+	 * @param dir
+	 * @param p
+	 */
 	private void move(int dir, Pixel p) {
 		p.on=false;
 		p.getDir(dir).on=true;
@@ -576,10 +677,23 @@ public class FacadeEntropy extends PApplet {
 		p.color=0xffffffff;
 	}
 
+//	
+	/**
+	 * 
+	 * can pixel move in given direction?
+	 * @param dir
+	 * @param p
+	 * @return
+	 */
 	private boolean canGo(int dir,Pixel p) {
 		return p.on&&p.hasDirOff(dir);
 	}
 
+	/* 
+	 * key control ... 
+	 * (non-Javadoc)
+	 * @see processing.core.PApplet#keyPressed()
+	 */
 	public void keyPressed() {
 		FacFont f = fontarray[fontnr];
 		//		aec.keyPressed(key);
@@ -608,37 +722,59 @@ public class FacadeEntropy extends PApplet {
 		case 'e':initImage();break;
 		case 'a':reqNr = Math.max(0,(reqNr-1)%reqList.size());break;
 		case 's':incrementReq();break;
-		case '=':imgnr = (imgnr+1)%4;genGif(); break;
+		case '=':imgnr = (imgnr+1)%4;initializeGif(); break;
 		case '-':fontnr = (fontnr+1)%fontarray.length;
 		case 'l':thread("speak");break;
 		}
 	}
 
-	private void incrementReq() {
-		reqNr = Math.max(0,(reqNr+1)%reqList.size());
-	}
-
-	private void initImage() {
-		imgOn=true;textOn=false;state=19;
-	}
-
-	private void initTimeline() {
-		episodeFrame = frameCount; state=20;textOn=false;imgOn=false;
-	}
-
-	private void initText() {
-		episodeFrame = frameCount; textOn=true;state=19;imgOn=false; thread("speak");
-		println(reqList.get(reqNr).getTitle());
-	}
-
-	private void initState(int n) {
-		state=n;textOn=false;imgOn=false;
-	}
-
-
+	
+		/**
+		 * speak using the google interface (on non-macs)
+		 */
+		public void speakGoogle() {
+			Request r = reqList.get(reqNr);
+			Audio audio = Audio.getInstance();
+			InputStream sound;
+			try {
+				sound = audio.getAudio(r.getText(), Language.GERMAN);
+				audio.play(sound);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JavaLayerException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		/**
+		 * speak using the mac TTS command line. 
+		 * Important: the german voices "Anna","Markus", "Petra", and "Yannick" need to be installed
+		 */
+		public void speak() {
+			String[] voices = {"Anna","Markus", "Petra", "Yannick"};
+			String text="";
+			if (thema) text = themen[th]; else
+				text = reqList.get(reqNr).getText();
+			 Process p;
+			 
+			try {
+				p = Runtime.getRuntime().exec("say -v " + voices[(int) (random(0,1)*voices.length)] +" "+ text);
+				println(text);
+				p.waitFor();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	/**
+	 * 
+	 * load data 
+	 * @throws ParseException
+	 */
 	public void requestData() throws ParseException {
-//				JSONObject json = loadJSONObject(url);
-		JSONObject json = loadJSONObject("../data/sample.json");
+		JSONObject json = loadJSONObject(url);
 		JSONArray msg = json.getJSONArray("MESSAGELIST");
 		for (int i = 0; i < msg.size(); i++) {
 
@@ -671,40 +807,10 @@ public class FacadeEntropy extends PApplet {
 		themen = loadStrings("../data/themen.txt");
 		createTimeline();
 	}
-// speak google
-//	public void speak() {
-//		Request r = reqList.get(reqNr);
-//		Audio audio = Audio.getInstance();
-//		InputStream sound;
-//		try {
-//			sound = audio.getAudio(r.getText(), Language.GERMAN);
-//			audio.play(sound);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} catch (JavaLayerException e) {
-//			e.printStackTrace();
-//		}
-//	}
 	
-	public void speak() {
-		String text="";
-		if (thema) text = themen[th]; else
-			text = reqList.get(reqNr).getText();
-		 Process p;
-		 
-		try {
-			p = Runtime.getRuntime().exec("say -v " + voices[(int) (random(0,1)*voices.length)] +" "+ text);
-			println(text);
-			p.waitFor();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
+	/**
+	 * create timeline of loaded requests (following 3 methods)
+	 */
 	private void createTimeline() {
 		timeline = new HashMap<Integer, ArrayList<Request>>();
 		timelineErledigt = new HashMap<Integer, ArrayList<Request>>();
@@ -715,7 +821,6 @@ public class FacadeEntropy extends PApplet {
 				addTimelineUnerledigt(r);
 		}
 	}
-
 	private void addTimelineUnerledigt(Request r) {
 		int day = (int) getDay(r);
 		if (timeline.containsKey(day)) {
@@ -727,7 +832,6 @@ public class FacadeEntropy extends PApplet {
 			timeline.put(day, l);
 		}
 	}
-	
 	private void addTimelineErledigt(Request r) {
 		int day = (int) getDay(r);
 		if (timelineErledigt.containsKey(day)) {
