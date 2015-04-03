@@ -49,7 +49,7 @@ public class FacadeEntropy extends PApplet {
 	private int state = 1;
 	private int direction = 0;
 	private boolean friction = true;
-	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=300";
+	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=400";
 	private boolean textOn;
 	private boolean verticalText = false;
 	private HashMap<Integer, Request> reqMap;
@@ -74,11 +74,15 @@ public class FacadeEntropy extends PApplet {
 	String imgfile[] = {"../data/11.gif","../data/11_w.gif","../data/10_w.gif","../data/10_fr.gif"};
 	int imgnr=2;
 	private PImage gifBG2;
-	private boolean x = false;
 	private String[] voices = {"Anna","Markus", "Petra", "Yannick"};
 	private String[] themen;
 	private int th = 0;
 	private boolean thema = false;
+	private boolean newReport = false;
+	private PImage sal;
+	private PImage neu;
+	private boolean salOn=false;
+	private int frameInterval;
 
 	public void setup() {
 		thread("requestData");
@@ -99,6 +103,8 @@ public class FacadeEntropy extends PApplet {
 		frameRate(25);
 		noSmooth();
 		initImage();
+		sal = loadImage("../data/sal.png");
+		neu = loadImage("../data/report.png");
 	}
 
 	private void genGif() {
@@ -108,13 +114,6 @@ public class FacadeEntropy extends PApplet {
 		gif.loop();
 	}
 
-	private void pullLottery(float perc){
-		ArrayList<Pixel> shuffle = shuffle();
-		for (int i=0; i < shuffle.size()*perc; i++) {
-			shuffle.get(i);
-			activePixels.add(shuffle.get(i));
-		}
-	}
 
 	private ArrayList<Pixel> shuffle() {
 		ArrayList<Pixel> v2 = new ArrayList<Pixel>(); 
@@ -224,19 +223,16 @@ public class FacadeEntropy extends PApplet {
 	}
 
 	public void draw() {
-		//		if (frameCount%50==0) {
-		//			thread("requestFont");
-		//		}
-		//		if (frameCount%50==25) {
-		//			thread("requestKey");
-		//		}
+		if (frameCount%1000==0) thread("requestData");
 		scheduler();
 		
 		aec.beginDraw();
-
 		background(0,0,0);
 		executeState();
-		if (imgOn) imageDisplay();
+		if (imgOn) gifDisplay();
+		if (salOn&&!newReport) imageDisplay(sal);
+		if (salOn&&newReport) imageDisplay(neu);
+		
 		dotDisplay();
 		if (textOn&&!thema) textDisplay();
 		if (textOn&&thema) themaDisplay();
@@ -245,47 +241,24 @@ public class FacadeEntropy extends PApplet {
 	}
 
 	private void scheduler() {
-//		states
-//	case 1:direction=0;forwDiag(p);break;
-//	case 2:direction=1;forwDiag(p);break;
-//	case 3:direction=2;forwDiag(p);break;
-//	case 4:direction=3;forwDiag(p);break;
-//	case 5:direction=4;forwDiag(p);break;
-//	case 6:direction=5;forwDiag(p);break;
-//	case 7:direction=6;forwDiag(p);break;
-//	case 8:direction=7;forwDiag(p);break;
-//	case 9:;break; // do nothing state
-//	case 11:moderandom(p);break;
-//	case 12:modechecker(p);break;
-//	case 13:modechecker2(p);break;
-//	case 14:modediag(p);break;
-//	case 15:modediag2(p);break;
-//	case 16:modevert(p);break;
-//	case 17:modehor(p);break;
-//	case 18:modefull(p);break;
-//	case 19:modeempty(p);break;
-//	case 20:modeTimeline(p);break;
-		
 		float s = frameCount-startFrame;
 		if (s==550) {initText();return;}
-		if (s==525) {initState(11);perc=0.3f;return;}
-		if (s==500) {schwund=true;return;}
+		if (s==525) {initState(11);return;}
+		if (s==480) {schwund=true;return;}
 		if (s==450) {friction=false;return;}
 		if (s==400) {initState(5);return;}
-		if (s==225) {initTimeline();return;}
-		if (s==200) {initState(11);perc=0.3f;return;}// random
-		if (s>150&&s<200) {randomPattern();return;}
-		if (s==50) {initImage();return;}
-		if (s>0&&s<50) {randomPattern();perc=1f;return;}
-	}
-	
-	public void randomPattern() {
-		int random = (int) random(10,21);
-		if (random == 10 || random == 20) initImage();
-		else
-			initState(random);
+		if (s==230) {salOn=false;perc=0.3f;initTimeline();newReport=false;return;}
+		if (s>170&&s<230) {initLogo();return;}
+		if (s==170) {initState(11);return;}// random
+		if (s>140&&s<170) {randomPattern();return;}
+		if (s==30) {initImage();return;}
+		if (s>0&&s<30) {randomPattern();perc=1f;return;}
 	}
 
+	private void initLogo() {
+		initState(19);salOn=true;imgOn=false;
+	}
+	
 	private void dotDisplay() {
 		stroke(255,255,255);
 		if(!friction) point(1,1);
@@ -300,9 +273,18 @@ public class FacadeEntropy extends PApplet {
 	private void textDisplay() {
 		noStroke();
 		// determines the speed (number of frames between text movements)
-		int frameInterval = 4;
+		frameInterval = 4;
 
 		Request request = reqList.get(reqNr);
+		while (request.played) {
+			request = reqList.get(reqNr);
+			incrementReq();
+			if (reqNr==reqList.size()-1) {
+				reqNr=0;
+				for (Request r:reqList) r.played=false;
+			}
+		}
+		
 		fill(na);
 
 
@@ -336,8 +318,7 @@ public class FacadeEntropy extends PApplet {
 	
 	private void themaDisplay() {
 		noStroke();
-		// determines the speed (number of frames between text movements)
-		int frameInterval = 4;
+		frameInterval = 4;
 
 		fill(na);
 
@@ -378,13 +359,17 @@ public class FacadeEntropy extends PApplet {
 		return;
 	}
 
-	private void imageDisplay() {
-		
-		int random = (int) random(10,20);
-		
+	private void gifDisplay() {
 		image(gif, 10f,2);
 		image(gif, 20f,2);
 		image(gif, 30f,2);
+		image(gifBG,40,2,32,20);
+		image(gifBG,0,2,10,20);
+		image(gifBG2,0,22,80,6);
+	}
+	
+	private void imageDisplay(PImage p) {
+		image(p,20f,2);
 		image(gifBG,40,2,32,20);
 		image(gifBG,0,2,10,20);
 		image(gifBG2,0,22,80,6);
@@ -474,26 +459,20 @@ public class FacadeEntropy extends PApplet {
 			}
 		}
 	}
-	/*
-	private void modeTimeline(Pixel p) {
-		boolean containsKey = timeline.containsKey(p.x-10);
-		if (containsKey&&p.y<19&&timeline.get(p.x-10)>(18-p.y)) {
-			 p.on = true; 
-		}
-		else p.on = false;
-	}*/
-	private void dim() {
-		for (Pixel p:idmap.values()) {
-			p.color=p.color&0x60ffffff;
-		}
 
+
+	public void randomPattern() {
+		int random = (int) random(10,19);
+		if (random == 10 || random == 18) initImage();
+		else
+			initState(random);
 	}
 
 	private void modeTimeline(Pixel p) {
 		int n=0;
 		int zeroline = 16;
 		int width = 20;
-		if ((p.x-10)>(frameCount-episodeFrame)/3f) {
+		if ((p.x-10)>(frameCount-episodeFrame)/2f) {
 			p.on=false;return;
 		}
 		if (timelineErledigt.containsKey(p.x%width)) n = timelineErledigt.get(p.x%width).size(); 
@@ -633,11 +612,6 @@ public class FacadeEntropy extends PApplet {
 		case '-':fontnr = (fontnr+1)%fontarray.length;
 		case 'l':thread("speak");break;
 		}
-
-		switch(keyCode) {
-		case RIGHT:txtx++;break;
-		case LEFT:txtx--;break;
-		}
 	}
 
 	private void incrementReq() {
@@ -661,31 +635,10 @@ public class FacadeEntropy extends PApplet {
 		state=n;textOn=false;imgOn=false;
 	}
 
-	public void requestFont() {
-		String lines[] = loadStrings("http://www.azmar.org/php/state.txt");
-		int k = Integer.parseInt(lines[0]);
-		if (fontnr!=k) {
-			fontnr = k;
-			println("font "+k);
-		}
-		println("font "+fontnr);
-	}
-	public void requestKey() {	
-		String lines[] = loadStrings("http://www.azmar.org/php/key.txt");
-		char k = lines[0].charAt(0);
-		if (keysent!=k) {
-			keysent = k;
-			key = k;
-			println("key "+k);
-			keyPressed();
-		}
-
-	}
-
 
 	public void requestData() throws ParseException {
-				JSONObject json = loadJSONObject(url);
-//		JSONObject json = loadJSONObject("../data/sample.json");
+//				JSONObject json = loadJSONObject(url);
+		JSONObject json = loadJSONObject("../data/sample.json");
 		JSONArray msg = json.getJSONArray("MESSAGELIST");
 		for (int i = 0; i < msg.size(); i++) {
 
@@ -703,11 +656,15 @@ public class FacadeEntropy extends PApplet {
 			DateFormat df = new SimpleDateFormat("MMM dd, yyyy hh:mm:ss a", Locale.ENGLISH);
 			r.setDatec(df.parse(m.getString("dateCreated")));
 			r.setDatem(df.parse(m.getString("dateLastModified")));
+			r.played = false;
 
 			if (!reqMap.containsKey(r.getId())) {
 				incoming  = true;
 				reqMap.put(r.getId(),r);
 				reqList.add(r);
+				newReport  = true;
+				println("new report");
+				reqNr=0;
 			}
 		}
 		println("msgs loaded");
@@ -770,6 +727,7 @@ public class FacadeEntropy extends PApplet {
 			timeline.put(day, l);
 		}
 	}
+	
 	private void addTimelineErledigt(Request r) {
 		int day = (int) getDay(r);
 		if (timelineErledigt.containsKey(day)) {

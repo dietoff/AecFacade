@@ -15,6 +15,7 @@ public class Request {
 	private String district;
 	private Date datec;
 	private Date datem;
+	public boolean played = false;
 
 	public String getTitle() {
 		return title;
