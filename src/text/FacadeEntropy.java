@@ -37,9 +37,9 @@ import processing.data.TableRow;
  */
 public class FacadeEntropy extends PApplet {
 
-//	private String url = "../data/sample.json";
-	private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=400";
-	
+//	private String url = "../data/sample.json"; // curated demo
+		private String url = "http://sal-if.linz.at/mobile/action?type=8&pageIndex=1&pageSize=400"; // live
+
 	AEC aec;
 	FacFont[] fontarray = { new FacFont(this, "../data/wendy.ttf", 5, 2f, 2.0f, 0.5f, 0.5f),
 			new FacFont(this, "../data/04B_03__.TTF", 4, 2f, 2f, 0.5f, 0.5f),
@@ -47,6 +47,9 @@ public class FacadeEntropy extends PApplet {
 			new FacFont(this,"../data/coders_crux.ttf", 8, 2.f, 2.f, 0.5f, 0.5f)
 	};
 	int fontnr = 3;
+
+	boolean mac = true;
+
 	private HashMap<Integer, Pixel> idmap;
 	private HashMap<Integer, Pixel> xymap;
 	private ArrayList<Pixel> activePixels;
@@ -56,7 +59,7 @@ public class FacadeEntropy extends PApplet {
 	private float perc = 0.3f;
 	private int startFrame=0;
 	private int episodeFrame=0;
-	
+
 	private boolean friction = true;
 	private boolean textOn;
 	private boolean verticalText = false;
@@ -67,13 +70,13 @@ public class FacadeEntropy extends PApplet {
 	private boolean thema = false;
 	private boolean newReport = false;
 	private boolean salOn=false;
-	
+
 	private HashMap<Integer, Request> reqMap;
 	private ArrayList<Request> reqList;
 	private int reqNr = 0;
 	private HashMap<Integer,ArrayList<Request>> timeline;
 	private HashMap<Integer, ArrayList<Request>> timelineErledigt;
-	
+
 	private Gif gif;
 	private PImage sal;
 	private PImage neu;
@@ -81,17 +84,17 @@ public class FacadeEntropy extends PApplet {
 	private PImage gifBG2;
 	String imgfile[] = {"../data/11.gif","../data/11_w.gif","../data/10_w.gif","../data/10_fr.gif"};
 	int imgnr=2;
-	
+
 	// colors
 	private int unerledigt = color(150);
 	private int erledigt = color(120);
 	private int inBearb = color(210);
 	private int na = color(255);
-	
+
 	// array for topic maps
 	private String[] themen;
 	private int th = 0;
-	
+
 
 	public void setup() {
 		thread("requestData");
@@ -234,14 +237,14 @@ public class FacadeEntropy extends PApplet {
 	public void draw() {
 		if (frameCount%1000==0) thread("requestData");
 		scheduler();
-		
+
 		aec.beginDraw();
 		background(0,0,0);
 		executeState();
 		if (imgOn) gifDisplay();
 		if (salOn&&!newReport) imageDisplay(sal);
 		if (salOn&&newReport) imageDisplay(neu);
-		
+
 		pixelDisplay();
 		if (textOn&&!thema) textDisplay();
 		if (textOn&&thema) themaDisplay();
@@ -249,7 +252,7 @@ public class FacadeEntropy extends PApplet {
 		aec.drawSides();
 	}
 
-	
+
 	/**
 	 *  This is the main scheduler of the display sequence - switch states
 	 */
@@ -354,7 +357,7 @@ public class FacadeEntropy extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * draw vertical running text
 	 */
@@ -372,7 +375,7 @@ public class FacadeEntropy extends PApplet {
 				for (Request r:reqList) r.played=false;
 			}
 		}
-		
+
 		fill(na);
 		String txt = request.getTitle();
 		String[] split = txt.split(" ");
@@ -380,7 +383,7 @@ public class FacadeEntropy extends PApplet {
 		int maxPos = 35;
 		FacFont f = fontarray[fontnr];
 		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()*.5f); // loop point based on length of string
-		
+
 		int loopFrames = (maxPos-minPos) * frameInterval;
 		int i = frameCount-episodeFrame; // episode frame marks the beginning of the loop
 		if (i == loopFrames) {
@@ -423,7 +426,7 @@ public class FacadeEntropy extends PApplet {
 		txt = txt.replace(" nr ", " nummer ");
 		FacFont f = fontarray[fontnr];
 		int minPos = (int) (-txt.length()*f.getFONT_SIZE()*f.getFONT_SCALE_Y()*.5f); // loop point based on length of string
-		
+
 		int loopFrames = (maxPos-minPos) * frameInterval;
 		int i = frameCount-episodeFrame;
 		if (i == loopFrames) {
@@ -438,7 +441,7 @@ public class FacadeEntropy extends PApplet {
 		renderText(8, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
 		renderText(5, max(minPos, maxPos - (i%loopFrames) / frameInterval), txt );
 	}
-	
+
 	/**
 	 * render gif animation
 	 */
@@ -450,7 +453,7 @@ public class FacadeEntropy extends PApplet {
 		image(gifBG,0,2,10,20);
 		image(gifBG2,0,22,80,6);
 	}
-	
+
 	/**
 	 * render a given PImage at standard position
 	 */
@@ -529,7 +532,7 @@ public class FacadeEntropy extends PApplet {
 		double diff = (System.currentTimeMillis()-datec)/(double)(3600000*24);
 		return diff;
 	}
-	
+
 	//
 
 	private void incrementReq() {
@@ -637,8 +640,8 @@ public class FacadeEntropy extends PApplet {
 		return true;
 	} else return false;
 	}
-	
-//	
+
+	//	
 	/**
 	 * 
 	 * move pixels forward in given direction, plus let them settle down
@@ -664,7 +667,7 @@ public class FacadeEntropy extends PApplet {
 		}
 	}
 
-//	
+	//	
 	/**
 	 * move pixel in given direction
 	 * @param dir
@@ -677,7 +680,7 @@ public class FacadeEntropy extends PApplet {
 		p.color=0xffffffff;
 	}
 
-//	
+	//	
 	/**
 	 * 
 	 * can pixel move in given direction?
@@ -728,46 +731,51 @@ public class FacadeEntropy extends PApplet {
 		}
 	}
 
-	
-		/**
-		 * speak using the google interface (on non-macs)
-		 */
-		public void speakGoogle() {
-			Request r = reqList.get(reqNr);
-			Audio audio = Audio.getInstance();
-			InputStream sound;
-			try {
-				sound = audio.getAudio(r.getText(), Language.GERMAN);
-				audio.play(sound);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (JavaLayerException e) {
-				e.printStackTrace();
-			}
+	/**
+	 * speak text
+	 */
+	public void speak() {
+		if (mac) speakMac(); else speakGoogle();
+	}
+
+	/**
+	 * speak using the mac TTS command line. 
+	 * Important: the german voices "Anna","Markus", "Petra", and "Yannick" need to be installed
+	 */
+	private void speakMac() {
+		String[] voices = {"Anna","Markus", "Petra", "Yannick"};
+		String text="";
+		if (thema) text = themen[th]; else
+			text = reqList.get(reqNr).getText();
+		Process p;
+
+		try {
+			p = Runtime.getRuntime().exec("say -v " + voices[(int) (random(0,1)*voices.length)] +" "+ text);
+			println(text);
+			p.waitFor();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		
-		/**
-		 * speak using the mac TTS command line. 
-		 * Important: the german voices "Anna","Markus", "Petra", and "Yannick" need to be installed
-		 */
-		public void speak() {
-			String[] voices = {"Anna","Markus", "Petra", "Yannick"};
-			String text="";
-			if (thema) text = themen[th]; else
-				text = reqList.get(reqNr).getText();
-			 Process p;
-			 
-			try {
-				p = Runtime.getRuntime().exec("say -v " + voices[(int) (random(0,1)*voices.length)] +" "+ text);
-				println(text);
-				p.waitFor();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+	}
+
+	/**
+	 * speak using the google interface (on non-macs)
+	 */
+	public void speakGoogle() {
+		Request r = reqList.get(reqNr);
+		Audio audio = Audio.getInstance();
+		InputStream sound;
+		try {
+			sound = audio.getAudio(r.getText(), Language.GERMAN);
+			audio.play(sound);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (JavaLayerException e) {
+			e.printStackTrace();
 		}
-		
+	}
 	/**
 	 * 
 	 * load data 
@@ -807,7 +815,7 @@ public class FacadeEntropy extends PApplet {
 		themen = loadStrings("../data/themen.txt");
 		createTimeline();
 	}
-	
+
 	/**
 	 * create timeline of loaded requests (following 3 methods)
 	 */
