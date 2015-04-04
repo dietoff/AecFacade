@@ -47,7 +47,6 @@ public class FacadeEntropy extends PApplet {
 			new FacFont(this,"../data/coders_crux.ttf", 8, 2.f, 2.f, 0.5f, 0.5f)
 	};
 	int fontnr = 3;
-
 	boolean mac = true;
 
 	private HashMap<Integer, Pixel> idmap;
@@ -258,17 +257,18 @@ public class FacadeEntropy extends PApplet {
 	 */
 	private void scheduler() {
 		float s = frameCount-startFrame;
-		if (s==550) {initText();return;}
-		if (s==525) {initState(11);return;}
-		if (s==480) {schwund=true;return;}
-		if (s==450) {friction=false;return;}
-		if (s==400) {initState(5);return;}
-		if (s==230) {salOn=false;perc=0.3f;initTimeline();newReport=false;return;}
-		if (s>170&&s<230) {initLogo();return;}
-		if (s==170) {initState(11);return;}// random
-		if (s>140&&s<170) {modeRandomPattern();return;}
-		if (s==30) {initImage();return;}
-		if (s>0&&s<30) {modeRandomPattern();perc=1f;return;}
+		if (s==500) {initText();return;}
+		if (s==480) {initState(11);return;}
+		if (s==430) {schwund=true;return;}
+		if (s==400) {friction=false;return;}
+		if (s==350) {int n = (int) random(1,9);
+		initState(n);return;}
+		if (s==175) {salOn=false;perc=0.3f;initTimeline();newReport=false;return;}
+//		if (s>170&&s<230) {initLogo();return;}
+		if (s==150) {initState(11);return;}// random
+		if (s>125&&s<150) {modeRandomPattern();return;}
+		if (s==25) {initImage();return;}
+		if (s>0&&s<25) {modeRandomPattern();perc=1f;return;}
 	}
 
 	/**
@@ -555,7 +555,7 @@ public class FacadeEntropy extends PApplet {
 
 	private void modeTimeline(Pixel p) {
 		int n=0;
-		int zeroline = 16;
+		int zeroline = 23;
 		int width = 20;
 		if ((p.x-10)>(frameCount-episodeFrame)/2f) {
 			p.on=false;return;
@@ -850,6 +850,10 @@ public class FacadeEntropy extends PApplet {
 			l.add(r);
 			timelineErledigt.put(day, l);
 		}
+	}
+	
+	public static void main(String[] args) {
+		PApplet.main(new String[] {/*"--present",*/"text.FacadeEntropy"});
 	}
 }
 
